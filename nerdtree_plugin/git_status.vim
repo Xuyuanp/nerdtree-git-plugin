@@ -74,6 +74,11 @@ function! g:NERDTreeGitStatusRefreshListener(path)
     endif
 endfunction
 
+function! g:NERDTreeGitStatusRefreshPathListener(path)
+    call g:NERDTreeGitStatusRefresh()
+    call g:NERDTreeGitStatusRefreshListener(a:path)
+endfunction
+
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
@@ -230,4 +235,5 @@ endfunction
 call s:NERDTreeGitStatusKeyMapping()
 
 call g:NERDTreeGitStatusRefresh()
-call g:NERDTreeRefreshNotifier.AddListener('g:NERDTreeGitStatusRefreshListener')
+call g:NERDTreeRefreshNotifier.AddListenerForAction('InitChildren', 'g:NERDTreeGitStatusRefreshListener')
+call g:NERDTreeRefreshNotifier.AddListenerForAction('PathRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
