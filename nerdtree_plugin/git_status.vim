@@ -75,7 +75,11 @@ function! g:NERDTreeGitStatusRefreshListener(path)
 endfunction
 
 function! g:NERDTreeGitStatusRefreshPathListener(path)
-    call g:NERDTreeGitStatusRefresh()
+    let pwd = getcwd()
+    if pwd =~ a:path.str()
+        echomsg 'refresh root ' . pwd
+        call g:NERDTreeGitStatusRefresh()
+    endif
     call g:NERDTreeGitStatusRefreshListener(a:path)
 endfunction
 
