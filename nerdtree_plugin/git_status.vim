@@ -235,11 +235,15 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
+" FUNCTION: s:NERDTreePrepareListeners {{{2
+function! s:NERDTreePrepareListeners()
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('RenderView',         'g:NERDTreeGitStatusRefreshPathListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('CacheDisplayString', 'g:NERDTreeGitStatusRefreshListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('RootRefresh',        'g:NERDTreeGitStatusRefreshPathListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('CurrentNodeRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
+endfunction
+
 if g:NERDTreeShowGitStatus
     call s:NERDTreeGitStatusKeyMapping()
-
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('RenderView', 'g:NERDTreeGitStatusRefreshPathListener')
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('CacheDisplayString', 'g:NERDTreeGitStatusRefreshListener')
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('RootRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('CurrentNodeRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
+    call s:NERDTreePrepareListeners()
 endif
