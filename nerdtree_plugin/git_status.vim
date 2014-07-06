@@ -67,25 +67,23 @@ if !exists('s:NERDTreeIndicatorMap')
     endif
 endif
 
-function! g:NERDTreeGitStatusRefreshListener(path)
+function! g:NERDTreeGitStatusRefreshListener(path, params)
     let flag = g:NERDTreeGetGitStatusPrefix(a:path)
     if flag != ''
-        call a:path.addFlag(flag)
+        call a:path.flagSet.clearFlags("git", '')
+        call a:path.flagSet.addFlag("git", flag)
+    else
+        call a:path.flagSet.clearFlags("git", '')
     endif
 endfunction
 
-function! g:NERDTreeGitStatusRefreshPathListener(path)
-    let pwd = getcwd()
-    if pwd =~ a:path.str()
-        echomsg 'refresh root ' . pwd
-        call g:NERDTreeGitStatusRefresh()
-    endif
-    call g:NERDTreeGitStatusRefreshListener(a:path)
+function! g:NERDTreeGitStatusRefreshPathListener(path, params)
+    call g:NERDTreeGitStatusRefresh(a:path)
 endfunction
 
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
-function! g:NERDTreeGitStatusRefresh()
+function! g:NERDTreeGitStatusRefresh(path)
     let g:NERDTreeCachedGitFileStatus = {}
     let g:NERDTreeCachedGitDirtyDir   = {}
     let s:NOT_A_GIT_REPOSITORY        = 1
@@ -96,9 +94,10 @@ function! g:NERDTreeGitStatusRefresh()
         return
     endif
 
-    " let root = b:NERDTreeRoot.path._str()
-    " let statusesStr = system("cd " . root . " && git status -s")
-    let statusesStr = system("git status -s")
+    let root = a:path.str()
+    " let root = getcwd()
+    let statusesStr = system("cd " . root . " && git status -s")
+    " let statusesStr = system("git status -s")
     let statusesSplit = split(statusesStr, '\n')
     if statusesSplit != [] && statusesSplit[0] =~# "fatal:.*"
         let statusesSplit = []
@@ -236,8 +235,11 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
-call s:NERDTreeGitStatusKeyMapping()
+if g:NERDTreeShowGitStatus
+    call s:NERDTreeGitStatusKeyMapping()
 
-call g:NERDTreeGitStatusRefresh()
-call g:NERDTreeRefreshNotifier.AddListenerForAction('InitChildren', 'g:NERDTreeGitStatusRefreshListener')
-call g:NERDTreeRefreshNotifier.AddListenerForAction('PathRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('RenderView', 'g:NERDTreeGitStatusRefreshPathListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('CacheDisplayString', 'g:NERDTreeGitStatusRefreshListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('RootRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
+    call g:NERDTreeRefreshNotifier.AddListenerForAction('CurrentNodeRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
+endif
