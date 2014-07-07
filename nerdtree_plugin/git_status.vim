@@ -88,12 +88,6 @@ function! g:NERDTreeGitStatusRefresh(path)
     let g:NERDTreeCachedGitDirtyDir   = {}
     let s:NOT_A_GIT_REPOSITORY        = 1
 
-    " check if git command exists
-    if !executable('git')
-        call nerdtree#echo("Please install git command first.")
-        return
-    endif
-
     let root = a:path.str()
     " let root = getcwd()
     let statusesStr = system("cd " . root . " && git status -s")
@@ -239,11 +233,11 @@ endfunction
 function! s:NERDTreePrepareListeners()
     call g:NERDTreeRefreshNotifier.AddListenerForAction('RenderView',         'g:NERDTreeGitStatusRefreshPathListener')
     call g:NERDTreeRefreshNotifier.AddListenerForAction('CacheDisplayString', 'g:NERDTreeGitStatusRefreshListener')
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('RootRefresh',        'g:NERDTreeGitStatusRefreshPathListener')
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('CurrentNodeRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
+    " call g:NERDTreeRefreshNotifier.AddListenerForAction('RootRefresh',        'g:NERDTreeGitStatusRefreshPathListener')
+    " call g:NERDTreeRefreshNotifier.AddListenerForAction('CurrentNodeRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
 endfunction
 
-if g:NERDTreeShowGitStatus
+if g:NERDTreeShowGitStatus && executable('git')
     call s:NERDTreeGitStatusKeyMapping()
     call s:NERDTreePrepareListeners()
 endif
