@@ -70,10 +70,10 @@ endif
 function! g:NERDTreeGitStatusRefreshListener(path, params)
     let flag = g:NERDTreeGetGitStatusPrefix(a:path)
     if flag != ''
-        call a:path.flagSet.clearFlags("git", '')
+        call a:path.flagSet.clearFlags("git")
         call a:path.flagSet.addFlag("git", flag)
     else
-        call a:path.flagSet.clearFlags("git", '')
+        call a:path.flagSet.clearFlags("git")
     endif
 endfunction
 
@@ -89,9 +89,7 @@ function! g:NERDTreeGitStatusRefresh(path)
     let s:NOT_A_GIT_REPOSITORY        = 1
 
     let root = a:path.str()
-    " let root = getcwd()
     let statusesStr = system("cd " . root . " && git status -s")
-    " let statusesStr = system("git status -s")
     let statusesSplit = split(statusesStr, '\n')
     if statusesSplit != [] && statusesSplit[0] =~# "fatal:.*"
         let statusesSplit = []
@@ -227,6 +225,37 @@ function! s:NERDTreeGitStatusKeyMapping()
     let s = '<SNR>' . s:SID() . '_'
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapNextHunk, 'scope': "Node", 'callback': s."jumpToNextHunk"})
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
+endfunction
+
+autocmd CursorHold * silent! call s:CursorHoldUpdate()
+" FUNCTION: s:CursorHoldUpdate() {{{2
+function! s:CursorHoldUpdate()
+    if !nerdtree#isTreeOpen()
+        return
+    endif
+
+    let winnr = winnr()
+    call nerdtree#putCursorInTreeWin()
+    let node = b:NERDTreeRoot.refreshFlags()
+    call NERDTreeRender()
+    exec winnr . "wincmd w"
+endfunction
+
+autocmd BufWritePost * call s:FileUpdate(expand("%"))
+" FUNCTION: s:FileUpdate(fname) {{{2
+function! s:FileUpdate(fname)
+    if !nerdtree#isTreeOpen()
+        return
+    endif
+
+    call nerdtree#putCursorInTreeWin()
+    let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
+    while !empty(node)
+        call node.refreshFlags()
+        let node = node.parent
+    endwhile
+
+    call NERDTreeRender()
 endfunction
 
 " FUNCTION: s:NERDTreePrepareListeners {{{2
