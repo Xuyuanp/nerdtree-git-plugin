@@ -54,10 +54,6 @@ function! g:NERDTreeGitStatusRefreshListener(event)
     endif
 endfunction
 
-function! g:NERDTreeGitStatusRefreshPathListener(path)
-    call g:NERDTreeGitStatusRefresh()
-endfunction
-
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
@@ -210,7 +206,7 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
-autocmd CursorHold * silent! call s:CursorHoldUpdate()
+" autocmd CursorHold * silent! call s:CursorHoldUpdate()
 " FUNCTION: s:CursorHoldUpdate() {{{2
 function! s:CursorHoldUpdate()
     if !nerdtree#isTreeOpen()
@@ -233,8 +229,10 @@ function! s:FileUpdate(fname)
 
     call nerdtree#putCursorInTreeWin()
     let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
+    call node.refreshFlags()
+    let node = node.parent
     while !empty(node)
-        call node.refreshFlags()
+        call node.refreshDirFlags()
         let node = node.parent
     endwhile
 
