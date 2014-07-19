@@ -264,6 +264,24 @@ function! s:FileUpdate(fname)
     call NERDTreeRender()
 endfunction
 
+autocmd filetype nerdtree call s:AddHighlighting()
+function! s:AddHighlighting()
+    syn match NERDTreeGitStatusModified #✹# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusAdded #✚# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusUntracked #✭# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusRenamed "➜" containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusDirDirty "✗" containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusDirClean "✔︎" containedin=NERDTreeFlags
+ 
+    hi def link NERDTreeGitStatusModified Special
+    hi def link NERDTreeGitStatusAdded Function
+    hi def link NERDTreeGitStatusRenamed Title
+    hi def link NERDTreeGitStatusUnmerged Label
+    hi def link NERDTreeGitStatusUntracked Comment
+    hi def link NERDTreeGitStatusDirDirty Tag
+    hi def link NERDTreeGitStatusDirClean DiffAdd
+endfunction
+
 function! s:SetupListeners()
     call g:NERDTreePathNotifier.AddListener("init", "g:NERDTreeGitStatusRefreshListener")
     call g:NERDTreePathNotifier.AddListener("refresh", "g:NERDTreeGitStatusRefreshListener")
