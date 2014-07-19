@@ -30,41 +30,18 @@ if !exists('g:NERDTreeUseSimpleIndicator')
     let g:NERDTreeUseSimpleIndicator = 0
 endif
 
-if !exists("g:NERDTreeUseGitToMove")
-    let g:NERDTreeUseGitToMove = 1
-endif
-
-if !exists("g:NERDTreeUseGitToDelete")
-    let g:NERDTreeUseGitToDelete = 1
-endif
-
 if !exists('s:NERDTreeIndicatorMap')
-    let s:NERDTreeIndicatorMap = {}
-    if g:NERDTreeUseSimpleIndicator
-        let s:NERDTreeIndicatorMap = {
-                    \ "Modified"  : "~",
-                    \ "Staged"    : "+",
-                    \ "Untracked" : "*",
-                    \ "Renamed"   : "»",
-                    \ "Unmerged"  : "=",
-                    \ "Deleted"   : "-",
-                    \ "Dirty"     : "×",
-                    \ "Clean"     : "ø",
-                    \ "Unknown"   : "?"
-                    \ }
-    else
-        let s:NERDTreeIndicatorMap = {
-                    \ "Modified"  : "✹",
-                    \ "Staged"    : "✚",
-                    \ "Untracked" : "✭",
-                    \ "Renamed"   : "➜",
-                    \ "Unmerged"  : "═",
-                    \ "Deleted"   : "✖",
-                    \ "Dirty"     : "✗",
-                    \ "Clean"     : "✔︎",
-                    \ "Unknown"   : "?"
-                    \ }
-    endif
+    let s:NERDTreeIndicatorMap = {
+                \ "Modified"  : "✹",
+                \ "Staged"    : "✚",
+                \ "Untracked" : "✭",
+                \ "Renamed"   : "➜",
+                \ "Unmerged"  : "═",
+                \ "Deleted"   : "✖",
+                \ "Dirty"     : "✗",
+                \ "Clean"     : "✔︎",
+                \ "Unknown"   : "?"
+                \ }
 endif
 
 
