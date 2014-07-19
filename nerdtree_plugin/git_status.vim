@@ -30,47 +30,27 @@ if !exists('g:NERDTreeUseSimpleIndicator')
     let g:NERDTreeUseSimpleIndicator = 0
 endif
 
-if !exists("g:NERDTreeUseGitToMove")
-    let g:NERDTreeUseGitToMove = 1
-endif
-
-if !exists("g:NERDTreeUseGitToDelete")
-    let g:NERDTreeUseGitToDelete = 1
-endif
-
 if !exists('s:NERDTreeIndicatorMap')
-    let s:NERDTreeIndicatorMap = {}
-    if g:NERDTreeUseSimpleIndicator
-        let s:NERDTreeIndicatorMap = {
-                    \ "Modified"  : "~",
-                    \ "Staged"    : "+",
-                    \ "Untracked" : "*",
-                    \ "Renamed"   : "»",
-                    \ "Unmerged"  : "=",
-                    \ "Deleted"   : "-",
-                    \ "Dirty"     : "×",
-                    \ "Clean"     : "ø",
-                    \ "Unknown"   : "?"
-                    \ }
-    else
-        let s:NERDTreeIndicatorMap = {
-                    \ "Modified"  : "✹",
-                    \ "Staged"    : "✚",
-                    \ "Untracked" : "✭",
-                    \ "Renamed"   : "➜",
-                    \ "Unmerged"  : "═",
-                    \ "Deleted"   : "✖",
-                    \ "Dirty"     : "✗",
-                    \ "Clean"     : "✔︎",
-                    \ "Unknown"   : "?"
-                    \ }
-    endif
+    let s:NERDTreeIndicatorMap = {
+                \ "Modified"  : "✹",
+                \ "Staged"    : "✚",
+                \ "Untracked" : "✭",
+                \ "Renamed"   : "➜",
+                \ "Unmerged"  : "═",
+                \ "Deleted"   : "✖",
+                \ "Dirty"     : "✗",
+                \ "Clean"     : "✔︎",
+                \ "Unknown"   : "?"
+                \ }
 endif
 
-function! g:NERDTreeGitStatusRefreshListener(path)
-    let flag = g:NERDTreeGetGitStatusPrefix(a:path)
+
+function! g:NERDTreeGitStatusRefreshListener(event)
+    let path = a:event.subject
+    let flag = g:NERDTreeGetGitStatusPrefix(path)
+    call path.flagSet.clearFlags("git")
     if flag != ''
-        call a:path.addFlag(flag)
+        call path.flagSet.addFlag("git", flag)
     endif
 endfunction
 
@@ -81,15 +61,8 @@ function! g:NERDTreeGitStatusRefresh()
     let g:NERDTreeCachedGitDirtyDir   = {}
     let s:NOT_A_GIT_REPOSITORY        = 1
 
-    " check if git command exists
-    if !executable('git')
-        call nerdtree#echo("Please install git command first.")
-        return
-    endif
-
-    " let root = b:NERDTreeRoot.path._str()
-    " let statusesStr = system("cd " . root . " && git status -s")
-    let statusesStr = system("git status -s")
+    let root = b:NERDTreeRoot.path.str()
+    let statusesStr = system("cd " . root . " && git status -s")
     let statusesSplit = split(statusesStr, '\n')
     if statusesSplit != [] && statusesSplit[0] =~# "fatal:.*"
         let statusesSplit = []
@@ -111,7 +84,7 @@ function! g:NERDTreeGitStatusRefresh()
         if pathStr =~# '\.\./.*'
             continue
         endif
-        let statusKey     = s:NERDTreeGetFileGitStatusKey(statusLine[0], statusLine[1])
+        let statusKey = s:NERDTreeGetFileGitStatusKey(statusLine[0], statusLine[1])
         let g:NERDTreeCachedGitFileStatus[fnameescape(pathStr)] = statusKey
 
         call s:NERDTreeCacheDirtyDir(pathStr)
@@ -142,9 +115,15 @@ endfunction
 " FUNCTION: g:NERDTreeGetGitStatusPrefix(path) {{{2
 " return the indicator of the path
 " Args: path
+let s:GitStatusCacheTimeExpiry = 2
+let s:GitStatusCacheTime = 0
 function! g:NERDTreeGetGitStatusPrefix(path)
-    let pathStr = a:path._str()
-    let cwd = b:NERDTreeRoot.path._str() . a:path.Slash()
+    if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
+        let s:GitStatusCacheTime = localtime()
+        call g:NERDTreeGitStatusRefresh()
+    endif
+    let pathStr = a:path.str()
+    let cwd = b:NERDTreeRoot.path.str() . a:path.Slash()
     if nerdtree#runningWindows()
         let pathStr = a:path.WinToUnixPath(pathStr)
         let cwd = a:path.WinToUnixPath(cwd)
@@ -227,7 +206,64 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
-call s:NERDTreeGitStatusKeyMapping()
+" autocmd CursorHold * silent! call s:CursorHoldUpdate()
+" FUNCTION: s:CursorHoldUpdate() {{{2
+function! s:CursorHoldUpdate()
+    if !nerdtree#isTreeOpen()
+        return
+    endif
 
-call g:NERDTreeGitStatusRefresh()
-call g:NERDTreeRefreshNotifier.AddListener('g:NERDTreeGitStatusRefreshListener')
+    let winnr = winnr()
+    call nerdtree#putCursorInTreeWin()
+    let node = b:NERDTreeRoot.refreshFlags()
+    call NERDTreeRender()
+    exec winnr . "wincmd w"
+endfunction
+
+autocmd BufWritePost * call s:FileUpdate(expand("%"))
+" FUNCTION: s:FileUpdate(fname) {{{2
+function! s:FileUpdate(fname)
+    if !nerdtree#isTreeOpen()
+        return
+    endif
+
+    call nerdtree#putCursorInTreeWin()
+    let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
+    call node.refreshFlags()
+    let node = node.parent
+    while !empty(node)
+        call node.refreshDirFlags()
+        let node = node.parent
+    endwhile
+
+    call NERDTreeRender()
+endfunction
+
+autocmd filetype nerdtree call s:AddHighlighting()
+function! s:AddHighlighting()
+    syn match NERDTreeGitStatusModified #✹# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusAdded #✚# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusUntracked #✭# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusRenamed "➜" containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusDirDirty "✗" containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusDirClean "✔︎" containedin=NERDTreeFlags
+ 
+    hi def link NERDTreeGitStatusModified Special
+    hi def link NERDTreeGitStatusAdded Function
+    hi def link NERDTreeGitStatusRenamed Title
+    hi def link NERDTreeGitStatusUnmerged Label
+    hi def link NERDTreeGitStatusUntracked Comment
+    hi def link NERDTreeGitStatusDirDirty Tag
+    hi def link NERDTreeGitStatusDirClean DiffAdd
+endfunction
+
+function! s:SetupListeners()
+    call g:NERDTreePathNotifier.AddListener("init", "g:NERDTreeGitStatusRefreshListener")
+    call g:NERDTreePathNotifier.AddListener("refresh", "g:NERDTreeGitStatusRefreshListener")
+    call g:NERDTreePathNotifier.AddListener("refreshFlags", "g:NERDTreeGitStatusRefreshListener")
+endfunction
+
+if g:NERDTreeShowGitStatus && executable('git')
+    call s:NERDTreeGitStatusKeyMapping()
+    call s:SetupListeners()
+endif
