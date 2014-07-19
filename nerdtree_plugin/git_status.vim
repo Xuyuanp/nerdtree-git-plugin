@@ -67,28 +67,27 @@ if !exists('s:NERDTreeIndicatorMap')
     endif
 endif
 
-function! g:NERDTreeGitStatusRefreshListener(path, params)
+
+function! g:NERDTreeGitStatusRefreshListener(path)
     let flag = g:NERDTreeGetGitStatusPrefix(a:path)
+    call a:path.flagSet.clearFlags("git")
     if flag != ''
-        call a:path.flagSet.clearFlags("git")
         call a:path.flagSet.addFlag("git", flag)
-    else
-        call a:path.flagSet.clearFlags("git")
     endif
 endfunction
 
-function! g:NERDTreeGitStatusRefreshPathListener(path, params)
-    call g:NERDTreeGitStatusRefresh(a:path)
+function! g:NERDTreeGitStatusRefreshPathListener(path)
+    call g:NERDTreeGitStatusRefresh()
 endfunction
 
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
-function! g:NERDTreeGitStatusRefresh(path)
+function! g:NERDTreeGitStatusRefresh()
     let g:NERDTreeCachedGitFileStatus = {}
     let g:NERDTreeCachedGitDirtyDir   = {}
     let s:NOT_A_GIT_REPOSITORY        = 1
 
-    let root = a:path.str()
+    let root = b:NERDTreeRoot.path.str()
     let statusesStr = system("cd " . root . " && git status -s")
     let statusesSplit = split(statusesStr, '\n')
     if statusesSplit != [] && statusesSplit[0] =~# "fatal:.*"
@@ -111,7 +110,7 @@ function! g:NERDTreeGitStatusRefresh(path)
         if pathStr =~# '\.\./.*'
             continue
         endif
-        let statusKey     = s:NERDTreeGetFileGitStatusKey(statusLine[0], statusLine[1])
+        let statusKey = s:NERDTreeGetFileGitStatusKey(statusLine[0], statusLine[1])
         let g:NERDTreeCachedGitFileStatus[fnameescape(pathStr)] = statusKey
 
         call s:NERDTreeCacheDirtyDir(pathStr)
@@ -142,9 +141,15 @@ endfunction
 " FUNCTION: g:NERDTreeGetGitStatusPrefix(path) {{{2
 " return the indicator of the path
 " Args: path
+let s:GitStatusCacheTimeExpiry = 2
+let s:GitStatusCacheTime = 0
 function! g:NERDTreeGetGitStatusPrefix(path)
-    let pathStr = a:path._str()
-    let cwd = b:NERDTreeRoot.path._str() . a:path.Slash()
+    if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
+        let s:GitStatusCacheTime = localtime()
+        call g:NERDTreeGitStatusRefresh()
+    endif
+    let pathStr = a:path.str()
+    let cwd = b:NERDTreeRoot.path.str() . a:path.Slash()
     if nerdtree#runningWindows()
         let pathStr = a:path.WinToUnixPath(pathStr)
         let cwd = a:path.WinToUnixPath(cwd)
@@ -258,15 +263,7 @@ function! s:FileUpdate(fname)
     call NERDTreeRender()
 endfunction
 
-" FUNCTION: s:NERDTreePrepareListeners {{{2
-function! s:NERDTreePrepareListeners()
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('RenderView',         'g:NERDTreeGitStatusRefreshPathListener')
-    call g:NERDTreeRefreshNotifier.AddListenerForAction('CacheDisplayString', 'g:NERDTreeGitStatusRefreshListener')
-    " call g:NERDTreeRefreshNotifier.AddListenerForAction('RootRefresh',        'g:NERDTreeGitStatusRefreshPathListener')
-    " call g:NERDTreeRefreshNotifier.AddListenerForAction('CurrentNodeRefresh', 'g:NERDTreeGitStatusRefreshPathListener')
-endfunction
-
 if g:NERDTreeShowGitStatus && executable('git')
     call s:NERDTreeGitStatusKeyMapping()
-    call s:NERDTreePrepareListeners()
+    call g:NERDTreeRefreshNotifier.AddListener("g:NERDTreeGitStatusRefreshListener")
 endif
