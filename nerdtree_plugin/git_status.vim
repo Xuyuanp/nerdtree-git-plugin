@@ -229,6 +229,9 @@ function! s:FileUpdate(fname)
 
     call nerdtree#putCursorInTreeWin()
     let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
+    if node == {}
+        return
+    endif
     call node.refreshFlags()
     let node = node.parent
     while !empty(node)
