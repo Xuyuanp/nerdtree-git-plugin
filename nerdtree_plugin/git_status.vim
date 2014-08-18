@@ -206,7 +206,7 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
-" autocmd CursorHold * silent! call s:CursorHoldUpdate()
+autocmd CursorHold * silent! call s:CursorHoldUpdate()
 " FUNCTION: s:CursorHoldUpdate() {{{2
 function! s:CursorHoldUpdate()
     if !nerdtree#isTreeOpen()
