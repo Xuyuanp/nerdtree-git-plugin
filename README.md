@@ -3,7 +3,7 @@ nerdtree-git-plugin
 
 A plugin of NERDTree showing git status flags.
 
-The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) will no longer be maintained
+The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) will NOT be maintained any longer.
 
 ## Credits
 
