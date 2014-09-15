@@ -1,9 +1,9 @@
 nerdtree-git-plugin
 ===================
 
-A plugin of NERDTree showing git status flags.
+A plugin of NERDTree showing git status flags. Works with the **LATEST** version of NERDTree.
 
-The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) will NOT be maintained any longer.
+The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) will not be maintained any longer.
 
 ## Credits
 
