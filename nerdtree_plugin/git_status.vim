@@ -45,7 +45,7 @@ if !exists('s:NERDTreeIndicatorMap')
 endif
 
 
-function! g:NERDTreeGitStatusRefreshListener(event)
+function! NERDTreeGitStatusRefreshListener(event)
     let path = a:event.subject
     let flag = g:NERDTreeGetGitStatusPrefix(path)
     call path.flagSet.clearFlags("git")
@@ -261,9 +261,9 @@ function! s:AddHighlighting()
 endfunction
 
 function! s:SetupListeners()
-    call g:NERDTreePathNotifier.AddListener("init", "g:NERDTreeGitStatusRefreshListener")
-    call g:NERDTreePathNotifier.AddListener("refresh", "g:NERDTreeGitStatusRefreshListener")
-    call g:NERDTreePathNotifier.AddListener("refreshFlags", "g:NERDTreeGitStatusRefreshListener")
+    call g:NERDTreePathNotifier.AddListener("init", "NERDTreeGitStatusRefreshListener")
+    call g:NERDTreePathNotifier.AddListener("refresh", "NERDTreeGitStatusRefreshListener")
+    call g:NERDTreePathNotifier.AddListener("refreshFlags", "NERDTreeGitStatusRefreshListener")
 endfunction
 
 if g:NERDTreeShowGitStatus && executable('git')
