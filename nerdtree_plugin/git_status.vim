@@ -18,6 +18,10 @@ if !exists('g:NERDTreeShowGitStatus')
     let g:NERDTreeShowGitStatus = 1
 endif
 
+if g:NERDTreeShowGitStatus == 0
+    finish
+endif
+
 if !exists('g:NERDTreeMapNextHunk')
     let g:NERDTreeMapNextHunk = "]c"
 endif
@@ -26,8 +30,12 @@ if !exists('g:NERDTreeMapPrevHunk')
     let g:NERDTreeMapPrevHunk = "[c"
 endif
 
-if !exists('g:NERDTreeUseSimpleIndicator')
-    let g:NERDTreeUseSimpleIndicator = 0
+if !exists('g:NERDTreeUpdateOnWrite')
+    let g:NERDTreeUpdateOnWrite = 1
+endif
+
+if !exists('g:NERDTreeUpdateOnCursorHold')
+    let g:NERDTreeUpdateOnCursorHold = 1
 endif
 
 if !exists('s:NERDTreeIndicatorMap')
@@ -206,7 +214,9 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
-autocmd CursorHold * silent! call s:CursorHoldUpdate()
+if g:NERDTreeUpdateOnCursorHold == 1
+    autocmd CursorHold * silent! call s:CursorHoldUpdate()
+endif
 " FUNCTION: s:CursorHoldUpdate() {{{2
 function! s:CursorHoldUpdate()
     if !nerdtree#isTreeOpen()
@@ -220,7 +230,9 @@ function! s:CursorHoldUpdate()
     exec winnr . "wincmd w"
 endfunction
 
-autocmd BufWritePost * call s:FileUpdate(expand("%"))
+if g:NERDTreeUpdateOnWrite == 1
+    autocmd BufWritePost * call s:FileUpdate(expand("%"))
+endif
 " FUNCTION: s:FileUpdate(fname) {{{2
 function! s:FileUpdate(fname)
     if !nerdtree#isTreeOpen()
@@ -247,9 +259,9 @@ function! s:AddHighlighting()
     syn match NERDTreeGitStatusModified #✹# containedin=NERDTreeFlags
     syn match NERDTreeGitStatusAdded #✚# containedin=NERDTreeFlags
     syn match NERDTreeGitStatusUntracked #✭# containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusRenamed "➜" containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusDirDirty "✗" containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusDirClean "✔︎" containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusRenamed #➜# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusDirDirty #✗# containedin=NERDTreeFlags
+    syn match NERDTreeGitStatusDirClean #✔︎# containedin=NERDTreeFlags
  
     hi def link NERDTreeGitStatusModified Special
     hi def link NERDTreeGitStatusAdded Function
