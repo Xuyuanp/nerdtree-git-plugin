@@ -9,3 +9,5 @@ The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) wil
 
 *  [scrooloose](https://github.com/scrooloose): Open API for me.
 *  [git_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
+
+![Imgur](http://i.imgur.com/jSCwGjU.gif?1)
