@@ -13,11 +13,13 @@ The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) wil
 For Vundle
 
 `Plugin 'scrooloose/nerdtree'`
+
 `Plugin 'Xuyuanp/nerdtree-git-plugin'`
 
 For NeoBundle
 
 `NeoBundle 'scrooloose/nerdtree'`
+
 `NeoBundle 'Xuyuanp/nerdtree-git-plugin'`
 
 ## Credits
