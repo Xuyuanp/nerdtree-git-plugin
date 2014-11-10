@@ -231,7 +231,7 @@ function! s:CursorHoldUpdate()
 endfunction
 
 if g:NERDTreeUpdateOnWrite == 1
-    autocmd BufWritePost * call s:FileUpdate(expand("%"))
+    autocmd BufWritePost * call s:FileUpdate(expand("%:p"))
 endif
 " FUNCTION: s:FileUpdate(fname) {{{2
 function! s:FileUpdate(fname)
