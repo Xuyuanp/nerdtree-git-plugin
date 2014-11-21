@@ -65,9 +65,9 @@ endfunction
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
-    let g:NERDTreeCachedGitFileStatus = {}
-    let g:NERDTreeCachedGitDirtyDir   = {}
-    let s:NOT_A_GIT_REPOSITORY        = 1
+    let b:NERDTreeCachedGitFileStatus = {}
+    let b:NERDTreeCachedGitDirtyDir   = {}
+    let b:NOT_A_GIT_REPOSITORY        = 1
 
     let root = b:NERDTreeRoot.path.str()
     let statusesStr = system("cd " . root . " && git status -s")
@@ -76,7 +76,7 @@ function! g:NERDTreeGitStatusRefresh()
         let statusesSplit = []
         return
     endif
-    let s:NOT_A_GIT_REPOSITORY = 0
+    let b:NOT_A_GIT_REPOSITORY = 0
 
     for statusLine in statusesSplit
         " cache git status of files
@@ -93,7 +93,7 @@ function! g:NERDTreeGitStatusRefresh()
             continue
         endif
         let statusKey = s:NERDTreeGetFileGitStatusKey(statusLine[0], statusLine[1])
-        let g:NERDTreeCachedGitFileStatus[fnameescape(pathStr)] = statusKey
+        let b:NERDTreeCachedGitFileStatus[fnameescape(pathStr)] = statusKey
 
         call s:NERDTreeCacheDirtyDir(pathStr)
     endfor
@@ -108,8 +108,8 @@ function! s:NERDTreeCacheDirtyDir(pathStr)
     let dirtyPath = dirtyPath
     let dirtyPath = substitute(dirtyPath, '/[^/]*$', "/", "")
     let cwd = fnameescape('./')
-    while dirtyPath =~# '.\+/.*' && has_key(g:NERDTreeCachedGitDirtyDir, fnameescape(dirtyPath)) == 0
-        let g:NERDTreeCachedGitDirtyDir[fnameescape(dirtyPath)] = "Dirty"
+    while dirtyPath =~# '.\+/.*' && has_key(b:NERDTreeCachedGitDirtyDir, fnameescape(dirtyPath)) == 0
+        let b:NERDTreeCachedGitDirtyDir[fnameescape(dirtyPath)] = "Dirty"
         let dirtyPath = substitute(dirtyPath, '/[^/]*/$', "/", "")
     endwhile
 endfunction
@@ -139,9 +139,9 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     let pathStr = substitute(pathStr, fnameescape(cwd), "", "")
     let statusKey = ""
     if a:path.isDirectory
-        let statusKey = get(g:NERDTreeCachedGitDirtyDir, fnameescape(pathStr . '/'), "")
+        let statusKey = get(b:NERDTreeCachedGitDirtyDir, fnameescape(pathStr . '/'), "")
     else
-        let statusKey = get(g:NERDTreeCachedGitFileStatus, fnameescape(pathStr), "")
+        let statusKey = get(b:NERDTreeCachedGitFileStatus, fnameescape(pathStr), "")
     endif
     return s:NERDTreeGetIndicator(statusKey)
 endfunction
@@ -149,9 +149,9 @@ endfunction
 " FUNCTION: s:NERDTreeGetCWDGitStatus() {{{2
 " return the indicator of cwd
 function! g:NERDTreeGetCWDGitStatus()
-    if s:NOT_A_GIT_REPOSITORY
+    if b:NOT_A_GIT_REPOSITORY
         return ""
-    elseif g:NERDTreeCachedGitDirtyDir == {} && g:NERDTreeCachedGitFileStatus == {}
+    elseif b:NERDTreeCachedGitDirtyDir == {} && b:NERDTreeCachedGitFileStatus == {}
         return s:NERDTreeGetIndicator("Clean")
     endif
     return s:NERDTreeGetIndicator("Dirty")
