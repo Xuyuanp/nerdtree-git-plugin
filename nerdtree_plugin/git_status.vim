@@ -254,7 +254,7 @@ function! s:FileUpdate(fname)
     call NERDTreeRender()
 endfunction
 
-autocmd filetype nerdtree call s:AddHighlighting()
+autocmd FileType nerdtree call s:AddHighlighting()
 function! s:AddHighlighting()
     syn match NERDTreeGitStatusModified #✹# containedin=NERDTreeFlags
     syn match NERDTreeGitStatusAdded #✚# containedin=NERDTreeFlags
