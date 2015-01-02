@@ -162,7 +162,7 @@ function! s:NERDTreeGetIndicator(statusKey)
     if indicator != ""
         return indicator
     endif
-    return ''
+    return ' '
 endfunction
 
 function! s:NERDTreeGetFileGitStatusKey(us, them)
