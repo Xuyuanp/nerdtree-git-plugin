@@ -214,11 +214,15 @@ function! s:NERDTreeGitStatusKeyMapping()
     call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
 endfunction
 
-if g:NERDTreeUpdateOnCursorHold == 1
+augroup nerdtreegitplugin
     autocmd CursorHold * silent! call s:CursorHoldUpdate()
-endif
+augroup END
 " FUNCTION: s:CursorHoldUpdate() {{{2
 function! s:CursorHoldUpdate()
+    if g:NERDTreeUpdateOnCursorHold != 1
+        return
+    endif
+
     if !nerdtree#isTreeOpen()
         return
     endif
@@ -230,14 +234,20 @@ function! s:CursorHoldUpdate()
     exec winnr . "wincmd w"
 endfunction
 
-if g:NERDTreeUpdateOnWrite == 1
+augroup nerdtreegitplugin
     autocmd BufWritePost * call s:FileUpdate(expand("%:p"))
-endif
+augroup END
+
 " FUNCTION: s:FileUpdate(fname) {{{2
 function! s:FileUpdate(fname)
+    if g:NERDTreeUpdateOnWrite != 1
+        return
+    endif
     if !nerdtree#isTreeOpen()
         return
     endif
+
+    let winnr = winnr()
 
     call nerdtree#putCursorInTreeWin()
     let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
@@ -252,6 +262,7 @@ function! s:FileUpdate(fname)
     endwhile
 
     call NERDTreeRender()
+    exec winnr . "wincmd w"
 endfunction
 
 autocmd FileType nerdtree call s:AddHighlighting()
