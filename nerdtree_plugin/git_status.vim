@@ -38,8 +38,8 @@ if !exists('g:NERDTreeUpdateOnCursorHold')
     let g:NERDTreeUpdateOnCursorHold = 1
 endif
 
-if !exists('s:NERDTreeIndicatorMap')
-    let s:NERDTreeIndicatorMap = {
+if !exists('g:NERDTreeIndicatorMap')
+    let g:NERDTreeIndicatorMap = {
                 \ "Modified"  : "✹",
                 \ "Staged"    : "✚",
                 \ "Untracked" : "✭",
@@ -158,7 +158,7 @@ function! g:NERDTreeGetCWDGitStatus()
 endfunction
 
 function! s:NERDTreeGetIndicator(statusKey)
-    let indicator = get(s:NERDTreeIndicatorMap, a:statusKey, "")
+    let indicator = get(g:NERDTreeIndicatorMap, a:statusKey, "")
     if indicator != ""
         return indicator
     endif
