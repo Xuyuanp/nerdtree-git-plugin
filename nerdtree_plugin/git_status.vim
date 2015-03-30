@@ -54,6 +54,9 @@ endif
 
 
 function! NERDTreeGitStatusRefreshListener(event)
+    if !exists('b:NOT_A_GIT_REPOSITORY')
+        call g:NERDTreeGitStatusRefresh()
+    endif
     let path = a:event.subject
     let flag = g:NERDTreeGetGitStatusPrefix(path)
     call path.flagSet.clearFlags("git")
@@ -105,9 +108,7 @@ function! s:NERDTreeCacheDirtyDir(pathStr)
     if dirtyPath =~# '\.\./.*'
         return
     endif
-    let dirtyPath = dirtyPath
     let dirtyPath = substitute(dirtyPath, '/[^/]*$', "/", "")
-    let cwd = fnameescape('./')
     while dirtyPath =~# '.\+/.*' && has_key(b:NERDTreeCachedGitDirtyDir, fnameescape(dirtyPath)) == 0
         let b:NERDTreeCachedGitDirtyDir[fnameescape(dirtyPath)] = "Dirty"
         let dirtyPath = substitute(dirtyPath, '/[^/]*/$', "/", "")
