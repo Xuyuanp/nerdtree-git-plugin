@@ -224,7 +224,7 @@ function! s:CursorHoldUpdate()
         return
     endif
 
-    if !nerdtree#isTreeOpen()
+    if !g:NERDTree.IsOpen()
         return
     endif
 
@@ -244,7 +244,7 @@ function! s:FileUpdate(fname)
     if g:NERDTreeUpdateOnWrite != 1
         return
     endif
-    if !nerdtree#isTreeOpen()
+    if !g:NERDTree.IsOpen()
         return
     endif
 
