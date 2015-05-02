@@ -229,7 +229,7 @@ function! s:CursorHoldUpdate()
     endif
 
     let winnr = winnr()
-    call nerdtree#putCursorInTreeWin()
+    call g:NERDTree.CursorToTreeWin()
     let node = b:NERDTreeRoot.refreshFlags()
     call NERDTreeRender()
     exec winnr . "wincmd w"
@@ -250,7 +250,7 @@ function! s:FileUpdate(fname)
 
     let winnr = winnr()
 
-    call nerdtree#putCursorInTreeWin()
+    call g:NERDTree.CursorToTreeWin()
     let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
     if node == {}
         return
