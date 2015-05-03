@@ -224,12 +224,12 @@ function! s:CursorHoldUpdate()
         return
     endif
 
-    if !nerdtree#isTreeOpen()
+    if !g:NERDTree.IsOpen()
         return
     endif
 
     let winnr = winnr()
-    call nerdtree#putCursorInTreeWin()
+    call g:NERDTree.CursorToTreeWin()
     let node = b:NERDTreeRoot.refreshFlags()
     call NERDTreeRender()
     exec winnr . "wincmd w"
@@ -244,13 +244,13 @@ function! s:FileUpdate(fname)
     if g:NERDTreeUpdateOnWrite != 1
         return
     endif
-    if !nerdtree#isTreeOpen()
+    if !g:NERDTree.IsOpen()
         return
     endif
 
     let winnr = winnr()
 
-    call nerdtree#putCursorInTreeWin()
+    call g:NERDTree.CursorToTreeWin()
     let node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
     if node == {}
         return
