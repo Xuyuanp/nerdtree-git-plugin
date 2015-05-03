@@ -65,6 +65,34 @@ function! NERDTreeGitStatusRefreshListener(event)
     endif
 endfunction
 
+function! NERDTreeGitStatusIgnoreEvaluator(event, value)
+    if a:value > 0
+        return a:value
+    endif
+    "return 0
+    if !exists('b:NOT_A_GIT_REPOSITORY')
+        call g:NERDTreeGitStatusRefresh()
+    endif
+    let path = a:event.subject
+    let pathStr = path.str()
+    let cwd = b:NERDTreeRoot.path.str() . path.Slash()
+    if nerdtree#runningWindows()
+        let pathStr = path.WinToUnixPath(pathStr)
+        let cwd = path.WinToUnixPath(cwd)
+    endif
+    let pathStr = substitute(pathStr, fnameescape(cwd), "", "")
+
+    if path.isDirectory
+        let statusKey = get(b:NERDTreeCachedGitDirtyDir, fnameescape(pathStr . '/'), "")
+    else
+        let statusKey = get(b:NERDTreeCachedGitFileStatus, fnameescape(pathStr), "")
+    endif
+    if statusKey == ""
+        return 1
+    endif
+    return 0
+endfunction
+
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
@@ -288,6 +316,7 @@ function! s:SetupListeners()
     call g:NERDTreePathNotifier.AddListener("init", "NERDTreeGitStatusRefreshListener")
     call g:NERDTreePathNotifier.AddListener("refresh", "NERDTreeGitStatusRefreshListener")
     call g:NERDTreePathNotifier.AddListener("refreshFlags", "NERDTreeGitStatusRefreshListener")
+    call g:NERDTreePathEvaluator.AddEvaluator("ignore", "NERDTreeGitStatusIgnoreEvaluator")
 endfunction
 
 if g:NERDTreeShowGitStatus && executable('git')
