@@ -13,6 +13,11 @@ if exists('g:loaded_nerdtree_git_status')
     finish
 endif
 let g:loaded_nerdtree_git_status = 1
+let g:CustomIgnoreMappings = { 
+         \ "statusFilter":{"key":"fs", "description":"git status filter", "enabled": 0, "callback":"toggleGitStatusFilter"},
+         \ "excludeFilter":{"key":"fe", "description":"git exclude filter", "enabled": 1, "callback":"toggleGitExcludeFilter"},
+         \ "ignoreFilter":{"key":"fi", "description":"git ignore filter", "enabled": 1, "callback":"toggleGitIgnoreFilter"}
+         \}
 
 if !exists('g:NERDTreeShowGitStatus')
     let g:NERDTreeShowGitStatus = 1
@@ -63,6 +68,85 @@ function! NERDTreeGitStatusRefreshListener(event)
     if flag != ''
         call path.flagSet.addFlag("git", flag)
     endif
+endfunction
+
+function NERDTreeGitExcludeFilter(params)
+    if g:CustomIgnoreMappings["excludeFilter"]["enabled"]
+        return NERDTreeGitIgnoreFilterByFile(a:params, a:params['nerdtree'].root.path.str() . '/.git/info/exclude')
+    endif
+endfunction
+
+function NERDTreeGitIgnoreFilter(params)
+    if g:CustomIgnoreMappings["ignoreFilter"]["enabled"]
+        return NERDTreeGitIgnoreFilterByFile(a:params, a:params['nerdtree'].root.path.str() . '/.gitignore')
+    endif
+endfunction
+
+function NERDTreeGitIgnoreFilterByFile(params, fname)
+    if !filereadable(a:fname)
+        return
+    endif
+ 
+    let regexes = g:GitIgnoreRegex(a:fname)
+    if regexes == '\(\)$'
+        return
+    endif
+    return a:params['path'].str() =~ regexes
+endfunction
+ 
+"convert the gitignore file into a regex that we can match filenames against
+function g:GitIgnoreRegex(fname)
+ 
+    "the regex is expensive to build so we cache it
+    "if exists('b:NERDTreeGitIgnoreRegex')
+        "return b:NERDTreeGitIgnoreRegex
+    "endif
+ 
+    let lines = readfile(a:fname)
+    let regexes = []
+ 
+    for l in lines
+        if l =~ '^#' || l =~ '^\s*$'
+            continue
+        endif
+ 
+        let regex = l
+        let regex = substitute(regex, '\.', '\\.', 'g')
+        let regex = substitute(regex, '*', '.*', 'g')
+        let regex = substitute(regex, '?', '.', 'g')
+        let regex = escape(regex, '/~')
+        call add(regexes, regex)
+    endfor
+ 
+    let b:NERDTreeGitIgnoreRegex = '\(' . join(regexes, '\|') . '\)$'
+    return b:NERDTreeGitIgnoreRegex
+endfunction
+
+function! NERDTreeGitStatusIgnoreFilter(params)
+    if !g:CustomIgnoreMappings["statusFilter"]["enabled"]
+       return
+    endif
+    if !exists('b:NOT_A_GIT_REPOSITORY')
+        call g:NERDTreeGitStatusRefresh()
+    endif
+    let path = a:params['path']
+    let pathStr = path.str()
+    let cwd = a:params['nerdtree'].root.path.str() . path.Slash()
+    if nerdtree#runningWindows()
+        let pathStr = path.WinToUnixPath(pathStr)
+        let cwd = path.WinToUnixPath(cwd)
+    endif
+    let pathStr = substitute(pathStr, fnameescape(cwd), "", "")
+
+    if path.isDirectory
+        let statusKey = get(b:NERDTreeCachedGitDirtyDir, fnameescape(pathStr . '/'), "")
+    else
+        let statusKey = get(b:NERDTreeCachedGitFileStatus, fnameescape(pathStr), "")
+    endif
+    if statusKey == ""
+        return 1
+    endif
+    return 0
 endfunction
 
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
@@ -200,6 +284,24 @@ function! s:jumpToPrevHunk(node)
     endif
 endfunction
 
+function! s:toggleGitIgnoreFilter() 
+    let g:CustomIgnoreMappings["ignoreFilter"]["enabled"] = !g:CustomIgnoreMappings["ignoreFilter"]["enabled"]
+    call b:NERDTree.ui.renderViewSavingPosition()
+    call b:NERDTree.ui.centerView()
+endfunction
+
+function! s:toggleGitExcludeFilter() 
+    let g:CustomIgnoreMappings["excludeFilter"]["enabled"] = !g:CustomIgnoreMappings["excludeFilter"]["enabled"]
+    call b:NERDTree.ui.renderViewSavingPosition()
+    call b:NERDTree.ui.centerView()
+endfunction
+
+function! s:toggleGitStatusFilter() 
+    let g:CustomIgnoreMappings["statusFilter"]["enabled"] = !g:CustomIgnoreMappings["statusFilter"]["enabled"]
+    call b:NERDTree.ui.renderViewSavingPosition()
+    call b:NERDTree.ui.centerView()
+endfunction
+
 " Function: s:SID()   {{{2
 function s:SID()
     if !exists("s:sid")
@@ -211,8 +313,11 @@ endfun
 " FUNCTION: s:NERDTreeGitStatusKeyMapping {{{2
 function! s:NERDTreeGitStatusKeyMapping()
     let s = '<SNR>' . s:SID() . '_'
-    call NERDTreeAddKeyMap({'key': g:NERDTreeMapNextHunk, 'scope': "Node", 'callback': s."jumpToNextHunk"})
-    call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk"})
+    call NERDTreeAddKeyMap({'key': g:NERDTreeMapNextHunk, 'scope': "Node", 'callback': s."jumpToNextHunk", 'quickhelpText': "jump to next hunk"})
+    call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': "Node", 'callback': s."jumpToPrevHunk", 'quickhelpText': "jump to prev hunk"})
+    for customMapping in values(g:CustomIgnoreMappings)
+        call NERDTreeAddKeyMap({'key': customMapping["key"], 'scope': "all", 'callback': s.customMapping["callback"], 'quickhelpText': "toggle " . customMapping["description"]})
+    endfor
 endfunction
 
 augroup nerdtreegitplugin
@@ -288,6 +393,9 @@ function! s:SetupListeners()
     call g:NERDTreePathNotifier.AddListener("init", "NERDTreeGitStatusRefreshListener")
     call g:NERDTreePathNotifier.AddListener("refresh", "NERDTreeGitStatusRefreshListener")
     call g:NERDTreePathNotifier.AddListener("refreshFlags", "NERDTreeGitStatusRefreshListener")
+    call NERDTreeAddPathFilter('NERDTreeGitExcludeFilter')
+    call NERDTreeAddPathFilter('NERDTreeGitIgnoreFilter')
+    call NERDTreeAddPathFilter("NERDTreeGitStatusIgnoreFilter")
 endfunction
 
 if g:NERDTreeShowGitStatus && executable('git')
