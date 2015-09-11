@@ -30,7 +30,10 @@ For NeoBundle
 ## Configuration
 
 Use this variable to change symbols.
+
 **Note** that `~` is only allowed for modified and dirty
+
+```vimscript
 let g:NERDTreeIndicatorMap = {
     \ "Modified"  : "✹",
     \ "Staged"    : "✚",
@@ -42,3 +45,4 @@ let g:NERDTreeIndicatorMap = {
     \ "Clean"     : "✔︎",
     \ "Unknown"   : "?"
     \ }
+```
