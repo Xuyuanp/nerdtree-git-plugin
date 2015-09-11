@@ -26,3 +26,19 @@ For NeoBundle
 
 *  [scrooloose](https://github.com/scrooloose): Open API for me.
 *  [git_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
+
+## Configuration
+
+Use this variable to change symbols.
+**Note** that `~` is only allowed for modified and dirty
+let g:NERDTreeIndicatorMap = {
+    \ "Modified"  : "✹",
+    \ "Staged"    : "✚",
+    \ "Untracked" : "✭",
+    \ "Renamed"   : "➜",
+    \ "Unmerged"  : "═",
+    \ "Deleted"   : "✖",
+    \ "Dirty"     : "✗",
+    \ "Clean"     : "✔︎",
+    \ "Unknown"   : "?"
+    \ }

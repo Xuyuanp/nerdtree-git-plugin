@@ -268,12 +268,12 @@ endfunction
 
 autocmd FileType nerdtree call s:AddHighlighting()
 function! s:AddHighlighting()
-    syn match NERDTreeGitStatusModified #✹# containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusAdded #✚# containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusUntracked #✭# containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusRenamed #➜# containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusDirDirty #✗# containedin=NERDTreeFlags
-    syn match NERDTreeGitStatusDirClean #✔︎# containedin=NERDTreeFlags
+    exec 'syn match NERDTreeGitStatusModified #\'.g:NERDTreeIndicatorMap['Modified'].'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusAdded #'.g:NERDTreeIndicatorMap['Staged'].'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusUntracked #'.g:NERDTreeIndicatorMap['Untracked'].'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusRenamed #'.g:NERDTreeIndicatorMap['Renamed'].'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusDirDirty #\'.g:NERDTreeIndicatorMap['Dirty'].'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusDirClean #'.g:NERDTreeIndicatorMap['Clean'].'# containedin=NERDTreeFlags'
  
     hi def link NERDTreeGitStatusModified Special
     hi def link NERDTreeGitStatusAdded Function
