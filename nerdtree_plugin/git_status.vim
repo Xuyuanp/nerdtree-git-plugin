@@ -159,6 +159,12 @@ function! g:NERDTreeGetCWDGitStatus()
 endfunction
 
 function! s:NERDTreeGetIndicator(statusKey)
+    if exists('g:NERDTreeIndicatorMapCustom')
+        let indicator = get(g:NERDTreeIndicatorMapCustom, a:statusKey, "")
+        if indicator != ""
+            return indicator
+        endif
+    endif
     let indicator = get(g:NERDTreeIndicatorMap, a:statusKey, "")
     if indicator != ""
         return indicator
@@ -268,15 +274,15 @@ endfunction
 
 autocmd FileType nerdtree call s:AddHighlighting()
 function! s:AddHighlighting()
-    exec 'syn match NERDTreeGitStatusModified #\'.g:NERDTreeIndicatorMap['Modified'].'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusAdded #'.g:NERDTreeIndicatorMap['Staged'].'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusUntracked #'.g:NERDTreeIndicatorMap['Untracked'].'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusRenamed #'.g:NERDTreeIndicatorMap['Renamed'].'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusDirDirty #\'.g:NERDTreeIndicatorMap['Dirty'].'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusDirClean #'.g:NERDTreeIndicatorMap['Clean'].'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusModified #'    . s:NERDTreeGetIndicator('Modified')     .'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusStaged #'      . s:NERDTreeGetIndicator('Staged')       .'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusUntracked #'   . s:NERDTreeGetIndicator('Untracked')    .'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusRenamed #'     . s:NERDTreeGetIndicator('Renamed')      .'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusDirDirty #'    . s:NERDTreeGetIndicator('Dirty')        .'# containedin=NERDTreeFlags'
+    exec 'syn match NERDTreeGitStatusDirClean #'    . s:NERDTreeGetIndicator('Clean')        .'# containedin=NERDTreeFlags'
  
     hi def link NERDTreeGitStatusModified Special
-    hi def link NERDTreeGitStatusAdded Function
+    hi def link NERDTreeGitStatusStaged Function
     hi def link NERDTreeGitStatusRenamed Title
     hi def link NERDTreeGitStatusUnmerged Label
     hi def link NERDTreeGitStatusUntracked Comment
