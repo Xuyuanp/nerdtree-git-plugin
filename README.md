@@ -26,8 +26,6 @@ For NeoBundle
 
 Use this variable to change symbols.
 
-**Note** that `~` is only allowed for modified and dirty
-
 ```vimscript
 let g:NERDTreeIndicatorMapCustom = {
     \ "Modified"  : "✹",
@@ -46,3 +44,4 @@ let g:NERDTreeIndicatorMapCustom = {
 
 *  [scrooloose](https://github.com/scrooloose): Open API for me.
 *  [git_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
+*  [PickRelated](https://github.com/PickRelated): Added custom indicators & Review code.
