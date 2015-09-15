@@ -22,11 +22,6 @@ For NeoBundle
 
 `NeoBundle 'Xuyuanp/nerdtree-git-plugin'`
 
-## Credits
-
-*  [scrooloose](https://github.com/scrooloose): Open API for me.
-*  [git_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
-
 ## Configuration
 
 Use this variable to change symbols.
@@ -34,7 +29,7 @@ Use this variable to change symbols.
 **Note** that `~` is only allowed for modified and dirty
 
 ```vimscript
-let g:NERDTreeIndicatorMap = {
+let g:NERDTreeIndicatorMapCustom = {
     \ "Modified"  : "✹",
     \ "Staged"    : "✚",
     \ "Untracked" : "✭",
@@ -46,3 +41,8 @@ let g:NERDTreeIndicatorMap = {
     \ "Unknown"   : "?"
     \ }
 ```
+
+## Credits
+
+*  [scrooloose](https://github.com/scrooloose): Open API for me.
+*  [git_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
