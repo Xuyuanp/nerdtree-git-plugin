@@ -274,12 +274,18 @@ endfunction
 
 autocmd FileType nerdtree call s:AddHighlighting()
 function! s:AddHighlighting()
-    exec 'syn match NERDTreeGitStatusModified #'    . s:NERDTreeGetIndicator('Modified')     .'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusStaged #'      . s:NERDTreeGetIndicator('Staged')       .'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusUntracked #'   . s:NERDTreeGetIndicator('Untracked')    .'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusRenamed #'     . s:NERDTreeGetIndicator('Renamed')      .'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusDirDirty #'    . s:NERDTreeGetIndicator('Dirty')        .'# containedin=NERDTreeFlags'
-    exec 'syn match NERDTreeGitStatusDirClean #'    . s:NERDTreeGetIndicator('Clean')        .'# containedin=NERDTreeFlags'
+    let synmap = {
+                \ 'NERDTreeGitStatusModified'    : s:NERDTreeGetIndicator('Modified'),
+                \ 'NERDTreeGitStatusStaged'      : s:NERDTreeGetIndicator('Staged'),
+                \ 'NERDTreeGitStatusUntracked'   : s:NERDTreeGetIndicator('Untracked'),
+                \ 'NERDTreeGitStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
+                \ 'NERDTreeGitStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
+                \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
+                \ }
+
+    for name in keys(synmap)
+        exec 'syn match ' . name . ' #' . escape(synmap[name], '~') . '# containedin=NERDTreeFlags'
+    endfor
  
     hi def link NERDTreeGitStatusModified Special
     hi def link NERDTreeGitStatusStaged Function
