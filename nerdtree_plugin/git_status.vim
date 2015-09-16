@@ -38,8 +38,8 @@ if !exists('g:NERDTreeUpdateOnCursorHold')
     let g:NERDTreeUpdateOnCursorHold = 1
 endif
 
-if !exists('g:NERDTreeIndicatorMap')
-    let g:NERDTreeIndicatorMap = {
+if !exists('s:NERDTreeIndicatorMap')
+    let s:NERDTreeIndicatorMap = {
                 \ 'Modified'  : '✹',
                 \ 'Staged'    : '✚',
                 \ 'Untracked' : '✭',
@@ -165,7 +165,7 @@ function! s:NERDTreeGetIndicator(statusKey)
             return l:indicator
         endif
     endif
-    let l:indicator = get(g:NERDTreeIndicatorMap, a:statusKey, '')
+    let l:indicator = get(s:NERDTreeIndicatorMap, a:statusKey, '')
     if l:indicator !=# ''
         return l:indicator
     endif
