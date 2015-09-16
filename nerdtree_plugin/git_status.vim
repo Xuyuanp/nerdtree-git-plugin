@@ -133,7 +133,7 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     endif
     let l:pathStr = a:path.str()
     let l:cwd = b:NERDTreeRoot.path.str() . a:path.Slash()
-    if g:nerdtree#runningWindows()
+    if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
         let l:cwd = a:path.WinToUnixPath(l:cwd)
     endif
@@ -194,7 +194,7 @@ endfunction
 function! s:jumpToNextHunk(node)
     let l:position = search('\[[^{RO}]\+\]', '')
     if l:position
-        call g:nerdtree#echo('Jump to next hunk ')
+        call nerdtree#echo('Jump to next hunk ')
     endif
 endfunction
 
@@ -202,7 +202,7 @@ endfunction
 function! s:jumpToPrevHunk(node)
     let l:position = search('\[[^{RO}]\+\]', 'b')
     if l:position
-        call g:nerdtree#echo('Jump to prev hunk ')
+        call nerdtree#echo('Jump to prev hunk ')
     endif
 endfunction
 
@@ -217,8 +217,8 @@ endfun
 " FUNCTION: s:NERDTreeGitStatusKeyMapping {{{2
 function! s:NERDTreeGitStatusKeyMapping()
     let l:s = '<SNR>' . s:SID() . '_'
-    call g:NERDTreeAddKeyMap({'key': g:NERDTreeMapNextHunk, 'scope': 'Node', 'callback': l:s.'jumpToNextHunk'})
-    call g:NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': 'Node', 'callback': l:s.'jumpToPrevHunk'})
+    call NERDTreeAddKeyMap({'key': g:NERDTreeMapNextHunk, 'scope': 'Node', 'callback': l:s.'jumpToNextHunk'})
+    call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': 'Node', 'callback': l:s.'jumpToPrevHunk'})
 endfunction
 
 augroup nerdtreegitplugin
@@ -237,7 +237,7 @@ function! s:CursorHoldUpdate()
     let l:winnr = winnr()
     call g:NERDTree.CursorToTreeWin()
     call b:NERDTreeRoot.refreshFlags()
-    call g:NERDTreeRender()
+    call NERDTreeRender()
     exec l:winnr . 'wincmd w'
 endfunction
 
@@ -268,7 +268,7 @@ function! s:FileUpdate(fname)
         let l:node = l:node.parent
     endwhile
 
-    call g:NERDTreeRender()
+    call NERDTreeRender()
     exec l:winnr . 'wincmd w'
 endfunction
 
