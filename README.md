@@ -22,6 +22,12 @@ For NeoBundle
 
 `NeoBundle 'Xuyuanp/nerdtree-git-plugin'`
 
+For Plug
+
+`Plug 'scrooloose/nerdtree'`
+
+`Plug 'Xuyuanp/nerdtree-git-plugin'`
+
 ## Configuration
 
 Use this variable to change symbols.
