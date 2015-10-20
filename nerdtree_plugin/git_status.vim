@@ -73,7 +73,7 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NOT_A_GIT_REPOSITORY        = 1
 
     let l:root = b:NERDTreeRoot.path.str()
-    let l:statusesStr = system('cd ' . l:root . ' && git status -s')
+    let l:statusesStr = system('cd ' . l:root . ' && git -c color.status=false status -s')
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
         let l:statusesSplit = []
