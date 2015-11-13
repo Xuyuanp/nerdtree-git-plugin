@@ -217,8 +217,19 @@ endfun
 " FUNCTION: s:NERDTreeGitStatusKeyMapping {{{2
 function! s:NERDTreeGitStatusKeyMapping()
     let l:s = '<SNR>' . s:SID() . '_'
-    call NERDTreeAddKeyMap({'key': g:NERDTreeMapNextHunk, 'scope': 'Node', 'callback': l:s.'jumpToNextHunk'})
-    call NERDTreeAddKeyMap({'key': g:NERDTreeMapPrevHunk, 'scope': 'Node', 'callback': l:s.'jumpToPrevHunk'})
+
+    call NERDTreeAddKeyMap({
+        \ 'key': g:NERDTreeMapNextHunk,
+        \ 'scope': 'Node',
+        \ 'callback': l:s.'jumpToNextHunk',
+        \ 'quickhelpText': 'Jump to next git hunk' })
+
+    call NERDTreeAddKeyMap({
+        \ 'key': g:NERDTreeMapPrevHunk,
+        \ 'scope': 'Node',
+        \ 'callback': l:s.'jumpToPrevHunk',
+        \ 'quickhelpText': 'Jump to prev git hunk' })
+
 endfunction
 
 augroup nerdtreegitplugin
