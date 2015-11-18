@@ -73,7 +73,14 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NOT_A_GIT_REPOSITORY        = 1
 
     let l:root = b:NERDTreeRoot.path.str()
-    let l:statusesStr = system('cd ' . l:root . ' && git -c color.status=false status -s')
+    let l:gitcmd = 'git -c color.status=false status -s'
+    if exists('g:NERDTreeGitStatusIgnoreSubmodules')
+        let l:gitcmd = l:gitcmd . ' --ignore-submodules'
+        if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'
+            let l:gitcmd = l:gitcmd . '=' . g:NERDTreeGitStatusIgnoreSubmodules
+        endif
+    endif
+    let l:statusesStr = system('cd ' . l:root . ' && ' . l:gitcmd)
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
         let l:statusesSplit = []
