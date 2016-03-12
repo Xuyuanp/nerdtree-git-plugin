@@ -42,6 +42,7 @@ let g:NERDTreeIndicatorMapCustom = {
     \ "Deleted"   : "✖",
     \ "Dirty"     : "✗",
     \ "Clean"     : "✔︎",
+    \ 'Ignored'   : '☒',
     \ "Unknown"   : "?"
     \ }
 ```
