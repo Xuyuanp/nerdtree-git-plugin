@@ -54,7 +54,7 @@ if !exists('g:NERDTreeGitStatusIndicatorMap')
                 \ 'Renamed'   : '➜',
                 \ 'Unmerged'  : '═',
                 \ 'Unknown'   : '✗',
-                \ 'Deleted'   : '✗',
+                \ 'Deleted'   : '✖',
                 \ 'Dirty'     : '★',
                 \ 'Clean'     : '✔︎'
                 \ }
@@ -64,7 +64,7 @@ if !exists('g:NERDTreeGitStatusIndicatorMap')
                 \ 'Added'     : nr2char(8239),
                 \ 'Renamed'   : nr2char(8199),
                 \ 'Unmerged'  : nr2char(8200),
-                \ 'Deleted'   : nr2char(8200),
+                \ 'Deleted'   : nr2char(8287),
                 \ 'Unknown'   : nr2char(8195),
                 \ 'Dirty'     : nr2char(8202),
                 \ 'Clean'     : nr2char(8196)
@@ -352,8 +352,8 @@ function! s:AddHighlighting()
                 \ 'NERDTreeGitStatusModified'    : s:NERDTreeGetIndicator('Modified'),
                 \ 'NERDTreeGitStatusAdded'       : s:NERDTreeGetIndicator('Added'),
                 \ 'NERDTreeGitStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
-                \ 'NERDTreeGitStatusUnknown'     : s:NERDTreeGetIndicator('Unknown'),
                 \ 'NERDTreeGitStatusDeleted'     : s:NERDTreeGetIndicator('Deleted'),
+                \ 'NERDTreeGitStatusUnknown'     : s:NERDTreeGetIndicator('Unknown'),
                 \ 'NERDTreeGitStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
                 \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
                 \ }
@@ -368,12 +368,12 @@ function! s:AddHighlighting()
       endif
     endfor
 
+    hi def link NERDTreeGitStatusUnmerged NERDTreeGitUnmerged
     hi def link NERDTreeGitStatusModified NERDTreeGitModified
     hi def link NERDTreeGitStatusAdded NERDTreeGitAdded
     hi def link NERDTreeGitStatusRenamed  NERDTreeGitAdded
-    hi def link NERDTreeGitStatusUnmerged NERDTreeGitUnmerged
-    hi def link NERDTreeGitStatusUnknown NERDTreeGitUnknown
     hi def link NERDTreeGitStatusDeleted NERDTreeGitDeleted
+    hi def link NERDTreeGitStatusUnknown NERDTreeGitUnknown
     hi def link NERDTreeGitStatusDirDirty NERDTreeGitDirDirty
     hi def link NERDTreeGitStatusDirClean NERDTreeGitDirClean
 endfunction
