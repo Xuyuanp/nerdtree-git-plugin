@@ -54,6 +54,7 @@ if !exists('g:NERDTreeGitStatusIndicatorMap')
                 \ 'Renamed'   : '➜',
                 \ 'Unmerged'  : '═',
                 \ 'Unknown'   : '✗',
+                \ 'Deleted'   : '✗',
                 \ 'Dirty'     : '★',
                 \ 'Clean'     : '✔︎'
                 \ }
@@ -63,6 +64,7 @@ if !exists('g:NERDTreeGitStatusIndicatorMap')
                 \ 'Added'     : nr2char(8239),
                 \ 'Renamed'   : nr2char(8199),
                 \ 'Unmerged'  : nr2char(8200),
+                \ 'Deleted'   : nr2char(8200),
                 \ 'Unknown'   : nr2char(8195),
                 \ 'Dirty'     : nr2char(8202),
                 \ 'Clean'     : nr2char(8196)
@@ -91,7 +93,30 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NOT_A_GIT_REPOSITORY        = 1
 
     let l:root = b:NERDTree.root.path.str()
-    let l:gitcmd = 'git -c color.status=false status -s -uall | sort -r'
+    " them     us      Meaning
+    " -------------------------------------------------
+    "           [MD]   not updated
+    " M        [ MD]   updated in index
+    " A        [ MD]   added to index
+    " D         [ M]   deleted from index
+    " R        [ MD]   renamed in index
+    " C        [ MD]   copied in index
+    " [MARC]           index and work tree matches
+    " [ MARC]     M    work tree changed since index
+    " [ MARC]     D    deleted in work tree
+    " -------------------------------------------------
+    " D           D    unmerged, both deleted
+    " A           U    unmerged, added by us
+    " U           D    unmerged, deleted by them
+    " U           A    unmerged, added by them
+    " D           U    unmerged, deleted by us
+    " A           A    unmerged, both added
+    " U           U    unmerged, both modified
+    " -------------------------------------------------
+    " ?           ?    untracked
+    " !           !    ignored
+    " -------------------------------------------------
+    let l:gitcmd = 'git status -s -uall | sed -E ''s/^UU|^UD|^UA|^DU|^DD|^DA|^AU|^AA/1/g'' | sed -E ''s/^MM|^M |^ M|^  /2/g'' | sed -E ''s/^A\?|^A |^AM|^\?\?|^\? |^\?M/3/g'' | sed -E ''s/^RM|^R /4/g'' | sed -E ''s/^D |^DM/5/g'' | sort'
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:gitcmd = l:gitcmd . ' --ignore-submodules'
         if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'
@@ -110,9 +135,9 @@ function! g:NERDTreeGitStatusRefresh()
 
     for l:statusLine in l:statusesSplit
         " cache git status of files
-        let l:pathStr = substitute(l:statusLine, '...', '', '')
+        let l:pathStr = substitute(l:statusLine, '..', '', '')
         let l:pathSplit = split(l:pathStr, ' -> ')
-        let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
+        let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0])
         if len(l:pathSplit) == 2
             call s:NERDTreeCacheDirtyDir(l:pathSplit[0], l:statusKey)
             let l:pathStr = l:pathSplit[1]
@@ -193,21 +218,19 @@ function! s:NERDTreeGetIndicator(statusKey)
     return ''
 endfunction
 
-function! s:NERDTreeGetFileGitStatusKey(us, them)
-    " See git-status docs for more information
-
-    " We want to know if is modified whether it is staged or not
-    if a:us ==# 'M' ||  a:them ==# 'M'
-        return 'Modified'
-    " Untracked to added, AU/AA will result in unmerged
-    elseif get(['A', '?'], a:us, '') !=# '' && get(['?', ' '], a:them, '') !=# ''
-        return 'Added'
-    elseif a:us ==# 'R'
-        return 'Renamed'
-    elseif get(['U', 'D'], a:us, '') !=# '' || get(['U', 'D', 'A'], a:them, '') !=# ''
-        return 'Unmerged'
+function! s:NERDTreeGetFileGitStatusKey(rank)
+    if a:rank == 1
+      return 'Unmerged'
+    elseif a:rank == 2
+      return 'Modified'
+    elseif a:rank == 3
+      return 'Added'
+    elseif a:rank == 4
+      return 'Renamed'
+    elseif a:rank == 5
+      return 'Deleted'
     else
-        return 'Unknown'
+      return 'Unknown'
     endif
 endfunction
 
@@ -325,11 +348,12 @@ augroup AddHighlighting
 augroup END
 function! s:AddHighlighting()
     let l:synmap = {
+                \ 'NERDTreeGitStatusUnmerged'    : s:NERDTreeGetIndicator('Unmerged'),
                 \ 'NERDTreeGitStatusModified'    : s:NERDTreeGetIndicator('Modified'),
                 \ 'NERDTreeGitStatusAdded'       : s:NERDTreeGetIndicator('Added'),
                 \ 'NERDTreeGitStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
-                \ 'NERDTreeGitStatusUnmerged'     : s:NERDTreeGetIndicator('Unmerged'),
                 \ 'NERDTreeGitStatusUnknown'     : s:NERDTreeGetIndicator('Unknown'),
+                \ 'NERDTreeGitStatusDeleted'     : s:NERDTreeGetIndicator('Deleted'),
                 \ 'NERDTreeGitStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
                 \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
                 \ }
@@ -346,9 +370,10 @@ function! s:AddHighlighting()
 
     hi def link NERDTreeGitStatusModified NERDTreeGitModified
     hi def link NERDTreeGitStatusAdded NERDTreeGitAdded
-    hi def link NERDTreeGitStatusRenamed  NERDTreeGitRenamed
+    hi def link NERDTreeGitStatusRenamed  NERDTreeGitAdded
     hi def link NERDTreeGitStatusUnmerged NERDTreeGitUnmerged
     hi def link NERDTreeGitStatusUnknown NERDTreeGitUnknown
+    hi def link NERDTreeGitStatusDeleted NERDTreeGitDeleted
     hi def link NERDTreeGitStatusDirDirty NERDTreeGitDirDirty
     hi def link NERDTreeGitStatusDirClean NERDTreeGitDirClean
 endfunction
