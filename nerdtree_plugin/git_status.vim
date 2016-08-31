@@ -69,6 +69,14 @@ if !exists('g:NERDTreeGitStatusIndicatorMap')
                 \ 'Dirty'     : nr2char(8202),
                 \ 'Clean'     : nr2char(8196)
                 \ }
+        " Hide the backets
+        augroup webdevicons_conceal_nerdtree_brackets
+          au!
+          autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\]" contained conceal containedin=ALL
+          autocmd FileType nerdtree syntax match hideBracketsInNerdTree ".\[" contained conceal containedin=ALL
+          autocmd FileType nerdtree setlocal conceallevel=3
+          autocmd FileType nerdtree setlocal concealcursor=nvic
+        augroup END
     endif
 endif
 
@@ -360,9 +368,9 @@ function! s:AddHighlighting()
 
     for l:name in keys(l:synmap)
       if g:NERDTreeGitStatusNodeColorization == 1
-          exec 'syn match '.l:name.' "'.l:synmap[l:name].'.*" containedin=NERDTreeDir'
-          exec 'syn match '.l:name.' "'.l:synmap[l:name].'.*" containedin=NERDTreeFile'
-          exec 'syn match '.l:name.' "'.l:synmap[l:name].'.*" containedin=NERDTreeExecFile'
+          exec 'syn match '.l:name.' ".*'.l:synmap[l:name].'.*" containedin=NERDTreeDir'
+          exec 'syn match '.l:name.' ".*'.l:synmap[l:name].'.*" containedin=NERDTreeFile'
+          exec 'syn match '.l:name.' ".*'.l:synmap[l:name].'.*" containedin=NERDTreeExecFile'
       else
         exec 'syn match ' . l:name . ' #' . escape(l:synmap[l:name], '~') . '# containedin=NERDTreeFlags'
       endif
