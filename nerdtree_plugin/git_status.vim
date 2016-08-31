@@ -116,7 +116,7 @@ function! g:NERDTreeGitStatusRefresh()
     " ?           ?    untracked
     " !           !    ignored
     " -------------------------------------------------
-    let l:gitcmd = 'git status -s -uall | sed -E ''s/^UU|^UD|^UA|^DU|^DD|^DA|^AU|^AA/1/g'' | sed -E ''s/^MM|^M |^ M|^  /2/g'' | sed -E ''s/^A\?|^A |^AM|^\?\?|^\? |^\?M/3/g'' | sed -E ''s/^RM|^R /4/g'' | sed -E ''s/^D |^DM/5/g'' | sort'
+    let l:gitcmd = 'git status --porcelain -uall | sed -E ''s/^UU|^UD|^UA|^DU|^DD|^DA|^AU|^AA/1/g'' | sed -E ''s/^MM|^M |^ M|^  /2/g'' | sed -E ''s/^A\?|^A |^AM|^\?\?|^\? |^\?M/3/g'' | sed -E ''s/^RM|^R /4/g'' | sed -E ''s/^D |^DM/5/g'' | sort'
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:gitcmd = l:gitcmd . ' --ignore-submodules'
         if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'
