@@ -11,6 +11,7 @@
 " ============================================================================
 if exists('g:loaded_nerdtree_git_status')
     finish
+
 endif
 let g:loaded_nerdtree_git_status = 1
 
@@ -376,14 +377,14 @@ function! s:AddHighlighting()
       endif
     endfor
 
-    hi def link NERDTreeGitStatusUnmerged NERDTreeGitUnmerged
-    hi def link NERDTreeGitStatusModified NERDTreeGitModified
-    hi def link NERDTreeGitStatusAdded NERDTreeGitAdded
-    hi def link NERDTreeGitStatusRenamed  NERDTreeGitAdded
-    hi def link NERDTreeGitStatusDeleted NERDTreeGitDeleted
-    hi def link NERDTreeGitStatusUnknown NERDTreeGitUnknown
-    hi def link NERDTreeGitStatusDirDirty NERDTreeGitDirDirty
-    hi def link NERDTreeGitStatusDirClean NERDTreeGitDirClean
+    hi def link NERDTreeGitStatusUnmerged Function
+    hi def link NERDTreeGitStatusModified Special
+    hi def link NERDTreeGitStatusAdded Tag
+    hi def link NERDTreeGitStatusRenamed  Tag
+    hi def link NERDTreeGitStatusDeleted Comment
+    hi def link NERDTreeGitStatusUnknown Label
+    hi def link NERDTreeGitStatusDirDirty Special
+    hi def link NERDTreeGitStatusDirClean Tag
 endfunction
 
 function! s:SetupListeners()
