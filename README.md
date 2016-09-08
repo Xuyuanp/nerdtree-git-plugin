@@ -28,23 +28,6 @@ For Plug
 
 `Plug 'Xuyuanp/nerdtree-git-plugin'`
 
-## Configuration
-
-Use this variable to change symbols.
-
-```vimscript
-let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "✹",
-    \ "Staged"    : "✚",
-    \ "Untracked" : "✭",
-    \ "Renamed"   : "➜",
-    \ "Unmerged"  : "═",
-    \ "Deleted"   : "✖",
-    \ "Dirty"     : "✗",
-    \ "Clean"     : "✔︎",
-    \ "Unknown"   : "?"
-    \ }
-```
 
 ## FAQ
 
@@ -54,6 +37,24 @@ line 6:
 E484: Can't open file /tmp/vZEZ6gM/1` while nerdtree opening in fish, how to resolve this problem?
 
 This was because that vim couldn't execute `system` function in `fish`. Add `set shell=sh` in your vimrc.
+
+> How to config custom symbols?
+
+Use this variable to change symbols.
+
+	```vimscript
+	let g:NERDTreeIndicatorMapCustom = {
+	    \ "Modified"  : "✹",
+	    \ "Staged"    : "✚",
+	    \ "Untracked" : "✭",
+	    \ "Renamed"   : "➜",
+	    \ "Unmerged"  : "═",
+	    \ "Deleted"   : "✖",
+	    \ "Dirty"     : "✗",
+	    \ "Clean"     : "✔︎",
+	    \ "Unknown"   : "?"
+	    \ }
+	 ```
 
 ## Credits
 
