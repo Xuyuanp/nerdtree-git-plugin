@@ -252,27 +252,37 @@ function! s:CursorHoldUpdate()
         return
     endif
 
+    " Do not update when a special buffer is selected
+    if !empty(&l:buftype)
+        return
+    endif
+
     let l:winnr = winnr()
+    let l:altwinnr = winnr('#')
+
     call g:NERDTree.CursorToTreeWin()
     call b:NERDTree.root.refreshFlags()
     call NERDTreeRender()
+
+    exec l:altwinnr . 'wincmd w'
     exec l:winnr . 'wincmd w'
 endfunction
 
 augroup nerdtreegitplugin
     autocmd BufWritePost * call s:FileUpdate(expand('%:p'))
 augroup END
-
 " FUNCTION: s:FileUpdate(fname) {{{2
 function! s:FileUpdate(fname)
     if g:NERDTreeUpdateOnWrite != 1
         return
     endif
+
     if !g:NERDTree.IsOpen()
         return
     endif
 
     let l:winnr = winnr()
+    let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
     let l:node = b:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
@@ -287,6 +297,8 @@ function! s:FileUpdate(fname)
     endwhile
 
     call NERDTreeRender()
+
+    exec l:altwinnr . 'wincmd w'
     exec l:winnr . 'wincmd w'
 endfunction
 
