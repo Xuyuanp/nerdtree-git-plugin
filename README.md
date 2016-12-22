@@ -38,6 +38,8 @@ E484: Can't open file /tmp/vZEZ6gM/1` while nerdtree opening in fish, how to res
 
 This was because that vim couldn't execute `system` function in `fish`. Add `set shell=sh` in your vimrc.
 
+This issue has been fixed.
+
 > How to config custom symbols?
 
 Use this variable to change symbols.
