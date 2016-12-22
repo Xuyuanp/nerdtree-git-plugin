@@ -54,6 +54,7 @@ Use this variable to change symbols.
 	    \ "Deleted"   : "✖",
 	    \ "Dirty"     : "✗",
 	    \ "Clean"     : "✔︎",
+	    \ 'Ignored'   : '☒',
 	    \ "Unknown"   : "?"
 	    \ }
 	 ```

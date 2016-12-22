@@ -48,6 +48,7 @@ if !exists('s:NERDTreeIndicatorMap')
                 \ 'Deleted'   : '✖',
                 \ 'Dirty'     : '✗',
                 \ 'Clean'     : '✔︎',
+                \ 'Ignored'   : '☒',
                 \ 'Unknown'   : '?'
                 \ }
 endif
@@ -73,7 +74,7 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NOT_A_GIT_REPOSITORY        = 1
 
     let l:root = b:NERDTree.root.path.str()
-    let l:gitcmd = 'git -c color.status=false status -s'
+    let l:gitcmd = 'git -c color.status=false status -s --ignored'
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:gitcmd = l:gitcmd . ' --ignore-submodules'
         if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'
@@ -105,7 +106,13 @@ function! g:NERDTreeGitStatusRefresh()
         let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
         let b:NERDTreeCachedGitFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
-        call s:NERDTreeCacheDirtyDir(l:pathStr)
+        if l:statusKey == 'Ignored'
+            if isdirectory(l:pathStr)
+                let b:NERDTreeCachedGitDirtyDir[fnameescape(l:pathStr)] = l:statusKey
+            endif
+        else
+            call s:NERDTreeCacheDirtyDir(l:pathStr)
+        endif
     endfor
 endfunction
 
@@ -192,6 +199,8 @@ function! s:NERDTreeGetFileGitStatusKey(us, them)
         return 'Unmerged'
     elseif a:them ==# 'D'
         return 'Deleted'
+    elseif a:us ==# '!'
+        return 'Ignored'
     else
         return 'Unknown'
     endif
