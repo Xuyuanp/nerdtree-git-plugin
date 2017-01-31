@@ -43,27 +43,30 @@ function test() {
   fi
 
   cd ..
-  rm -rf $tempdir
-  diff -u ${basenametest}.ok ${basenametest}.out
+  DIFFOUTPUT="$(diff -u ${basenametest}.ok ${basenametest}.out)"
   OK=$?
   if [ "$OK" == 0 ]
   then
     if [ "$expect" == "failed" ]
     then
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 31 "not failed")
+      echo "$DIFFOUTPUT"
       OK=1
     else
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 32 ok)
       rm ${basenametest}.out
+      rm -rf $tempdir
     fi
   else
     if [ "$expect" == "failed" ]
     then
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 32 "failed correctly")
       rm ${basenametest}.out
+      rm -rf $tempdir
       OK=0
     else
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 31 ko)
+      echo "$DIFFOUTPUT"
     fi
   fi
   return $OK
