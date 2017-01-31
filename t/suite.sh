@@ -8,7 +8,7 @@ function colorecho() {
 
 function getdependencies() {
   rm -rf nerdtree
-  git clone https://github.com/scrooloose/nerdtree.git
+  git clone --depth 1 https://github.com/scrooloose/nerdtree.git
 }
 
 function test() {
