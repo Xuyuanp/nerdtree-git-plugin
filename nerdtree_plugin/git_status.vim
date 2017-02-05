@@ -52,6 +52,11 @@ if !exists('s:NERDTreeIndicatorMap')
                 \ }
 endif
 
+if exists('b:NERDTreeRoot')
+    let l:NERDRoot = b:NERDTreeRoot
+else
+    let l:NERDRoot = b:NERDTree.root
+endif
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
@@ -72,7 +77,7 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
-    let l:root = b:NERDTree.root.path.str()
+    let l:root = l:NERDRoot.path.str()
     let l:gitcmd = 'git -c color.status=false status -s'
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:gitcmd = l:gitcmd . ' --ignore-submodules'
@@ -139,7 +144,7 @@ function! g:NERDTreeGetGitStatusPrefix(path)
         call g:NERDTreeGitStatusRefresh()
     endif
     let l:pathStr = a:path.str()
-    let l:cwd = b:NERDTree.root.path.str() . a:path.Slash()
+    let l:cwd = l:NERDRoot.path.str() . a:path.Slash()
     if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
         let l:cwd = a:path.WinToUnixPath(l:cwd)
@@ -261,7 +266,7 @@ function! s:CursorHoldUpdate()
     let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
-    call b:NERDTree.root.refreshFlags()
+    call l:NERDRoot.refreshFlags()
     call NERDTreeRender()
 
     exec l:altwinnr . 'wincmd w'
@@ -285,7 +290,7 @@ function! s:FileUpdate(fname)
     let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
-    let l:node = b:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
+    let l:node = l:NERDRoot.findNode(g:NERDTreePath.New(a:fname))
     if l:node == {}
         return
     endif
