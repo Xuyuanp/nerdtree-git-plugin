@@ -28,7 +28,6 @@ For Plug
 
 `Plug 'Xuyuanp/nerdtree-git-plugin'`
 
-
 ## FAQ
 
 > Got error message like `Error detected while processing function
@@ -54,6 +53,7 @@ Use this variable to change symbols.
 	    \ "Deleted"   : "✖",
 	    \ "Dirty"     : "✗",
 	    \ "Clean"     : "✔︎",
+        \ 'Ignored'   : '☒',
 	    \ "Unknown"   : "?"
 	    \ }
 	 ```
