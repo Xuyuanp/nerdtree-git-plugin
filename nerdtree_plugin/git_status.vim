@@ -320,6 +320,7 @@ function! s:AddHighlighting()
                 \ 'NERDTreeGitStatusStaged'      : s:NERDTreeGetIndicator('Staged'),
                 \ 'NERDTreeGitStatusUntracked'   : s:NERDTreeGetIndicator('Untracked'),
                 \ 'NERDTreeGitStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
+                \ 'NERDTreeGitStatusIgnored'     : s:NERDTreeGetIndicator('Ignored'),
                 \ 'NERDTreeGitStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
                 \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
                 \ }
@@ -335,6 +336,8 @@ function! s:AddHighlighting()
     hi def link NERDTreeGitStatusUntracked Comment
     hi def link NERDTreeGitStatusDirDirty Tag
     hi def link NERDTreeGitStatusDirClean DiffAdd
+    " TODO: use diff color
+    hi def link NERDTreeGitStatusIgnored DiffAdd
 endfunction
 
 function! s:SetupListeners()
