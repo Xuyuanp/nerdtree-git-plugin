@@ -60,7 +60,7 @@ Use this variable to change symbols.
 
 > How to show `ignored` status?
 
-`let g:NERDTreeShowIgnoredStatus = 1`
+`let g:NERDTreeShowIgnoredStatus = 1` (a heavy feature may cost much more time)
 
 ## Credits
 
