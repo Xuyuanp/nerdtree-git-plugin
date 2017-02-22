@@ -38,6 +38,10 @@ if !exists('g:NERDTreeUpdateOnCursorHold')
     let g:NERDTreeUpdateOnCursorHold = 1
 endif
 
+if !exists('g:NERDTreeShowIgnoredStatus')
+    let g:NERDTreeShowIgnoredStatus = 0
+endif
+
 if !exists('s:NERDTreeIndicatorMap')
     let s:NERDTreeIndicatorMap = {
                 \ 'Modified'  : '✹',
@@ -74,7 +78,10 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NOT_A_GIT_REPOSITORY        = 1
 
     let l:root = b:NERDTree.root.path.str()
-    let l:gitcmd = 'git -c color.status=false status -s --ignored'
+    let l:gitcmd = 'git -c color.status=false status -s'
+    if g:NERDTreeShowIgnoredStatus
+        let l:gitcmd = l:gitcmd . ' --ignored'
+    endif
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:gitcmd = l:gitcmd . ' --ignore-submodules'
         if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'

@@ -58,6 +58,10 @@ Use this variable to change symbols.
 	    \ }
 	 ```
 
+> How to show `ignored` status?
+
+`let g:NERDTreeShowIgnoredStatus = 1`
+
 ## Credits
 
 *  [scrooloose](https://github.com/scrooloose): Open API for me.
