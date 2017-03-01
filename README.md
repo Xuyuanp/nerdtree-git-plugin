@@ -10,6 +10,12 @@ The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) wil
 
 ## Installation
 
+For Pathogen
+
+`git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdtree-git-plugin`
+
+Now reload the `vim`
+
 For Vundle
 
 `Plugin 'scrooloose/nerdtree'`
