@@ -190,7 +190,7 @@ function! s:NERDTreeGetIndicator(statusKey)
     if l:indicator !=# ''
         return l:indicator
     endif
-    return ''
+    return ' '
 endfunction
 
 function! s:NERDTreeGetFileGitStatusKey(us, them)
