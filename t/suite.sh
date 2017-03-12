@@ -54,21 +54,32 @@ function test() {
       OK=1
     else
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 32 ok)
-      rm ${basenametest}.out
-      rm -rf $tempdir
+      if [ "$CLEAN" == 0 ]
+      then
+        rm ${basenametest}.out
+        rm -rf $tempdir
+      fi
     fi
   else
     if [ "$expect" == "failed" ]
     then
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 32 "failed correctly")
-      rm ${basenametest}.out
-      rm -rf $tempdir
+      if [ "$CLEAN" == 0 ]
+      then
+        rm ${basenametest}.out
+        rm -rf $tempdir
+      fi
       OK=0
     else
       echo $(colorecho 34 ${basenametest}) "${title}" $(colorecho 31 ko)
       echo "$DIFFOUTPUT"
     fi
   fi
+  if [ "$SHOWDIFF" == 0 ]
+  then
+      echo "$DIFFOUTPUT"
+  fi
+
   return $OK
 }
 
@@ -78,6 +89,8 @@ function testsuite() {
   getdependencies
 
   SILENT=0
+  CLEAN=0
+  SHOWDIFF=0
 
   for testcase in test*.vim
   do
@@ -106,6 +119,8 @@ then
   testsuite
 else
   SILENT=1
+  CLEAN=1
+  SHOWDIFF=1
   test $@
   exit $?
 fi
