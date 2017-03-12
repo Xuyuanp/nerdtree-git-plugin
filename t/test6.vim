@@ -1,5 +1,4 @@
 """ negative patterns with ignore all
-"""" failed
 
 " check to avoid filtering negative patterns
 
