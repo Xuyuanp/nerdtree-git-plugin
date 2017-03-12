@@ -1,0 +1,15 @@
+language: generic
+
+sudo: required
+dist: trusty
+
+before_script:
+  - sudo apt-get install vim
+
+script:
+  - cd t
+  - ./suite.sh
+
+notifications:
+  email:
+    -  albertofanjul@gmail.com
