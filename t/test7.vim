@@ -1,5 +1,4 @@
 """ ignore dir patterns
-"""" failed
 
 " check to ignore dir patterns
 
