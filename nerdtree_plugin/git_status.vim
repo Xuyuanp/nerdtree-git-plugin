@@ -2,7 +2,7 @@
 " File:        git_status.vim
 " Description: plugin for NERD Tree that provides git status support
 " Maintainer:  Xuyuan Pang <xuyuanp at gmail dot com>
-" Last Change: 4 Apr 2014
+" Last Change: 17 Mar 2017
 " License:     This program is free software. It comes without any warranty,
 "              to the extent permitted by applicable law. You can redistribute
 "              it and/or modify it under the terms of the Do What The Fuck You
@@ -156,9 +156,8 @@ function! g:NERDTreeGitStatusRefresh()
         " cache git status of files
         let l:pathStr = substitute(l:statusLine, '..', '', '')
         let l:pathSplit = split(l:pathStr, ' -> ')
-        let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0])
         if len(l:pathSplit) == 2
-            call s:NERDTreeCacheDirtyDir(l:pathSplit[0], l:statusKey)
+            call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
             let l:pathStr = l:pathSplit[1]
         else
             let l:pathStr = l:pathSplit[0]
@@ -167,6 +166,8 @@ function! g:NERDTreeGitStatusRefresh()
         if l:pathStr =~# '\.\./.*'
             continue
         endif
+        let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
+        let l:pathStr = s:Trim(l:pathStr) " trim whitespace
         let b:NERDTreeCachedGitFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
         if l:statusKey == 'Ignored'
@@ -174,22 +175,22 @@ function! g:NERDTreeGitStatusRefresh()
                 let b:NERDTreeCachedGitDirtyDir[fnameescape(l:pathStr)] = l:statusKey
             endif
         else
-            call s:NERDTreeCacheDirtyDir(l:pathStr, l:statusKey)
+            call s:NERDTreeCacheDirtyDir(l:pathStr)
         endif
     endfor
 endfunction
 
-function! s:NERDTreeCacheDirtyDir(pathStr, statusKey)
+function! s:NERDTreeCacheDirtyDir(pathStr)
     " cache dirty dir
     let l:dirtyPath = s:NERDTreeTrimDoubleQuotes(a:pathStr)
     if l:dirtyPath =~# '\.\./.*'
         return
     endif
-    let l:dirtyPathInitial = substitute(l:dirtyPath, '/[^/]*$', '/', '')
-    let l:dirtyPath = l:dirtyPathInitial
+    let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*$', '/', '')
     while l:dirtyPath =~# '.\+/.*' && has_key(b:NERDTreeCachedGitDirtyDir, fnameescape(l:dirtyPath)) == 0
-      let b:NERDTreeCachedGitDirtyDir[fnameescape(l:dirtyPath)] = a:statusKey
-      let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*/$', '/', '')
+        let l:dirtyPath = s:Trim(l:dirtyPath) " trim whitespace
+        let b:NERDTreeCachedGitDirtyDir[fnameescape(l:dirtyPath)] = 'Dirty'
+        let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*/$', '/', '')
     endwhile
 endfunction
 
@@ -431,3 +432,7 @@ if g:NERDTreeShowGitStatus && executable('git')
     call s:NERDTreeGitStatusKeyMapping()
     call s:SetupListeners()
 endif
+
+function! s:Trim(input_string)
+    return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+  endfunction
