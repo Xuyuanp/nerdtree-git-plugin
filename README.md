@@ -30,9 +30,7 @@ For NeoBundle
 
 For Plug
 
-`Plug 'scrooloose/nerdtree'`
-
-`Plug 'Xuyuanp/nerdtree-git-plugin'`
+`Plug 'scrooloose/nerdtree' | Plug 'Xuyuanp/nerdtree-git-plugin'`
 
 ## FAQ
 
