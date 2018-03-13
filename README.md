@@ -68,6 +68,12 @@ Use this variable to change symbols.
 
 `let g:NERDTreeShowIgnoredStatus = 1` (a heavy feature may cost much more time)
 
+> How to add a symbol even on unmodified files
+
+This is useful, if you want to have a consistent indentation.
+
+`let g:NERDTreeGitUnchangedIndicator = '-'`
+
 ## Credits
 
 *  [scrooloose](https://github.com/scrooloose): Open API for me.
