@@ -67,6 +67,8 @@ function! NERDTreeGitStatusRefreshListener(event)
     call l:path.flagSet.clearFlags('git')
     if l:flag !=# ''
         call l:path.flagSet.addFlag('git', l:flag)
+    else
+        call l:path.flagSet.addFlag('git', '-')
     endif
 endfunction
 
