@@ -42,6 +42,10 @@ if !exists('g:NERDTreeShowIgnoredStatus')
     let g:NERDTreeShowIgnoredStatus = 0
 endif
 
+if !exists('g:NERDTreeGitUnchangedIndicator')
+    let g:NERDTreeGitUnchangedIndicator = ''
+endif
+
 if !exists('s:NERDTreeIndicatorMap')
     let s:NERDTreeIndicatorMap = {
                 \ 'Modified'  : '✹',
@@ -68,7 +72,7 @@ function! NERDTreeGitStatusRefreshListener(event)
     if l:flag !=# ''
         call l:path.flagSet.addFlag('git', l:flag)
     else
-        call l:path.flagSet.addFlag('git', '-')
+        call l:path.flagSet.addFlag('git', g:NERDTreeGitUnchangedIndicator)
     endif
 endfunction
 
