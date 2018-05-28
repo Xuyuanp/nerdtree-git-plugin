@@ -77,7 +77,7 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
-    let l:root = b:NERDTree.root.path.str()
+    let l:root = fnamemodify(b:NERDTree.root.path.str(), ":p:S")
     let l:gitcmd = 'git -c color.status=false status -s'
     if g:NERDTreeShowIgnoredStatus
         let l:gitcmd = l:gitcmd . ' --ignored'
