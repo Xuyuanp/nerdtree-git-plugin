@@ -68,11 +68,11 @@ Use this variable to change symbols.
 
 `let g:NERDTreeShowIgnoredStatus = 1` (a heavy feature may cost much more time)
 
-> How to add a symbol even on unmodified files
+> How to add a symbol even on unmodified files ?
 
-This is useful, if you want to have a consistent indentation.
+`let g:NERDTreeGitUnchangedIndicator = '✔︎'`
 
-`let g:NERDTreeGitUnchangedIndicator = '-'`
+This is especially useful in combination with [vim-devicons](https://github.com/ryanoasis/vim-devicons), because it allows you to keep a consistent indentation, regardless of git modification status.
 
 ## Credits
 
