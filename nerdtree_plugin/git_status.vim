@@ -88,7 +88,7 @@ function! g:NERDTreeGitStatusRefresh()
             let l:gitcmd = l:gitcmd . '=' . g:NERDTreeGitStatusIgnoreSubmodules
         endif
     endif
-    let l:statusesStr = system(l:gitcmd . ' ' . l:root)
+    silent let l:statusesStr = system(l:gitcmd . ' ' . l:root)
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
         let l:statusesSplit = []
