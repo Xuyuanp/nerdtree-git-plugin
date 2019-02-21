@@ -57,6 +57,9 @@ if !exists('s:NERDTreeIndicatorMap')
                 \ }
 endif
 
+function! s:NERDTree()
+    return getbufvar('%', 'b:NERDTree', g:NERDTree.ForCurrentTab())
+endfunction
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
@@ -73,11 +76,16 @@ endfunction
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
+    if !g:NERDTree.IsOpen()
+        return
+    endif
+
     let b:NERDTreeCachedGitFileStatus = {}
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
-    let l:root = fnamemodify(b:NERDTree.root.path.str(), ":p:S")
+    let l:NERDTree = s:NERDTree()
+    let l:root = fnamemodify(l:NERDTree.root.path.str(), ":p:S")
     let l:gitcmd = 'git -c color.status=false status -s'
     if g:NERDTreeShowIgnoredStatus
         let l:gitcmd = l:gitcmd . ' --ignored'
@@ -148,12 +156,17 @@ endfunction
 let s:GitStatusCacheTimeExpiry = 2
 let s:GitStatusCacheTime = 0
 function! g:NERDTreeGetGitStatusPrefix(path)
+    if !g:NERDTree.IsOpen()
+        return
+    endif
+
     if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
         let s:GitStatusCacheTime = localtime()
         call g:NERDTreeGitStatusRefresh()
     endif
     let l:pathStr = a:path.str()
-    let l:cwd = b:NERDTree.root.path.str() . a:path.Slash()
+    let l:NERDTree = s:NERDTree()
+    let l:cwd = l:NERDTree.root.path.str() . a:path.Slash()
     if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
         let l:cwd = a:path.WinToUnixPath(l:cwd)
@@ -278,7 +291,8 @@ function! s:CursorHoldUpdate()
     let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
-    call b:NERDTree.root.refreshFlags()
+    let l:NERDTree = s:NERDTree()
+    call l:NERDTree.root.refreshFlags()
     call NERDTreeRender()
 
     exec l:altwinnr . 'wincmd w'
@@ -302,7 +316,9 @@ function! s:FileUpdate(fname)
     let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
-    let l:node = b:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
+
+    let l:NERDTree = s:NERDTree()
+    let l:node = l:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
     if l:node == {}
         return
     endif
