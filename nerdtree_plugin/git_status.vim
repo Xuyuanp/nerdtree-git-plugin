@@ -57,12 +57,15 @@ if !exists('s:NERDTreeIndicatorMap')
                 \ }
 endif
 
-function! s:NERDTree()
-    return getbufvar('%', 'b:NERDTree', g:NERDTree.ForCurrentTab())
-endfunction
 
 function! NERDTreeGitStatusRefreshListener(event)
-    if !exists('b:NOT_A_GIT_REPOSITORY')
+    if !g:NERDTree.ExistsForTab() || !g:NERDTree.IsOpen()
+        return
+    endif
+
+    let l:NERDTreeBufnr = winbufnr(g:NERDTree.GetWinNum())
+    let l:NOT_A_GIT_REPOSITORY = getbufvar(l:NERDTreeBufnr, 'NOT_A_GIT_REPOSITORY', '')
+    if empty(l:NOT_A_GIT_REPOSITORY)
         call g:NERDTreeGitStatusRefresh()
     endif
     let l:path = a:event.subject
@@ -76,16 +79,24 @@ endfunction
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
+    if !g:NERDTree.ExistsForTab()
+        throw "NERDTree.NoTreeError: No tree exists for the current tab"
+    endif
+
     if !g:NERDTree.IsOpen()
         return
     endif
+
+    let l:winnr = winnr()
+    let l:altwinnr = winnr('#')
+
+    call g:NERDTree.CursorToTreeWin()
 
     let b:NERDTreeCachedGitFileStatus = {}
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
-    let l:NERDTree = s:NERDTree()
-    let l:root = fnamemodify(l:NERDTree.root.path.str(), ":p:S")
+    let l:root = fnamemodify(b:NERDTree.root.path.str(), ":p:S")
     let l:gitcmd = 'git -c color.status=false status -s'
     if g:NERDTreeShowIgnoredStatus
         let l:gitcmd = l:gitcmd . ' --ignored'
@@ -100,6 +111,8 @@ function! g:NERDTreeGitStatusRefresh()
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
         let l:statusesSplit = []
+        exec l:altwinnr . 'wincmd w'
+        exec l:winnr . 'wincmd w'
         return
     endif
     let b:NOT_A_GIT_REPOSITORY = 0
@@ -129,6 +142,9 @@ function! g:NERDTreeGitStatusRefresh()
             call s:NERDTreeCacheDirtyDir(l:pathStr)
         endif
     endfor
+
+    exec l:altwinnr . 'wincmd w'
+    exec l:winnr . 'wincmd w'
 endfunction
 
 function! s:NERDTreeCacheDirtyDir(pathStr)
@@ -156,7 +172,7 @@ endfunction
 let s:GitStatusCacheTimeExpiry = 2
 let s:GitStatusCacheTime = 0
 function! g:NERDTreeGetGitStatusPrefix(path)
-    if !g:NERDTree.IsOpen()
+    if !g:NERDTree.ExistsForTab()
         return
     endif
 
@@ -164,8 +180,8 @@ function! g:NERDTreeGetGitStatusPrefix(path)
         let s:GitStatusCacheTime = localtime()
         call g:NERDTreeGitStatusRefresh()
     endif
+    let l:NERDTree = g:NERDTree.ExistsForBuf() ? b:NERDTree : g:NERDTree.ForCurrentTab()
     let l:pathStr = a:path.str()
-    let l:NERDTree = s:NERDTree()
     let l:cwd = l:NERDTree.root.path.str() . a:path.Slash()
     if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
@@ -174,10 +190,13 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     let l:cwd = substitute(l:cwd, '\~', '\\~', 'g')
     let l:pathStr = substitute(l:pathStr, l:cwd, '', '')
     let l:statusKey = ''
+    let l:bufnr = bufnr(t:NERDTreeBufName)
     if a:path.isDirectory
-        let l:statusKey = get(b:NERDTreeCachedGitDirtyDir, fnameescape(l:pathStr . '/'), '')
+        let l:NERDTreeCachedGitDirtyDir = getbufvar(l:bufnr, 'NERDTreeCachedGitDirtyDir', {})
+        let l:statusKey = get(l:NERDTreeCachedGitDirtyDir, fnameescape(l:pathStr . '/'), '')
     else
-        let l:statusKey = get(b:NERDTreeCachedGitFileStatus, fnameescape(l:pathStr), '')
+        let l:NERDTreeCachedGitFileStatus = getbufvar(l:bufnr, 'NERDTreeCachedGitFileStatus', {})
+        let l:statusKey = get(l:NERDTreeCachedGitFileStatus, fnameescape(l:pathStr), '')
     endif
     return s:NERDTreeGetIndicator(l:statusKey)
 endfunction
@@ -185,9 +204,14 @@ endfunction
 " FUNCTION: s:NERDTreeGetCWDGitStatus() {{{2
 " return the indicator of cwd
 function! g:NERDTreeGetCWDGitStatus()
-    if b:NOT_A_GIT_REPOSITORY
+    if !g:NERDTree.ExistsForTab()
+        return
+    endif
+
+    let l:bufnr = bufnr(t:NERDTreeBufName)
+    if getbufvar(l:bufnr, 'NOT_A_GIT_REPOSITORY', 0)
         return ''
-    elseif b:NERDTreeCachedGitDirtyDir == {} && b:NERDTreeCachedGitFileStatus == {}
+    elseif getbufvar(l:bufnr, 'NERDTreeCachedGitDirtyDir', {}) == {} && getbufvar(l:bufnr, 'NERDTreeCachedGitFileStatus', {}) == {}
         return s:NERDTreeGetIndicator('Clean')
     endif
     return s:NERDTreeGetIndicator('Dirty')
@@ -291,8 +315,7 @@ function! s:CursorHoldUpdate()
     let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
-    let l:NERDTree = s:NERDTree()
-    call l:NERDTree.root.refreshFlags()
+    call b:NERDTree.root.refreshFlags()
     call NERDTreeRender()
 
     exec l:altwinnr . 'wincmd w'
@@ -316,9 +339,7 @@ function! s:FileUpdate(fname)
     let l:altwinnr = winnr('#')
 
     call g:NERDTree.CursorToTreeWin()
-
-    let l:NERDTree = s:NERDTree()
-    let l:node = l:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
+    let l:node = b:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
     if l:node == {}
         return
     endif
