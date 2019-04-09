@@ -88,7 +88,13 @@ function! g:NERDTreeGitStatusRefresh()
             let l:gitcmd = l:gitcmd . '=' . g:NERDTreeGitStatusIgnoreSubmodules
         endif
     endif
-    let l:statusesStr = system(l:gitcmd . ' ' . l:root)
+    if exists('g:NERDTreeGitStatusIncludeSubmodules')
+      let l:gitcmd = l:gitcmd . ' --ignore-submodules=all'
+      let l:gitcmd = 'cd ' . l:root . ' && ' . l:gitcmd . " && git submodule foreach --recursive '[ ${displaypath} != ${displaypath#..} ] || " . l:gitcmd ."'"
+    else
+      let l:gitcmd = l:gitcmd . ' ' . l:root
+    endif
+    let l:statusesStr = system(l:gitcmd)
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
         let l:statusesSplit = []
@@ -96,8 +102,16 @@ function! g:NERDTreeGitStatusRefresh()
     endif
     let b:NOT_A_GIT_REPOSITORY = 0
 
+    let l:moduleRoot = ''
+
     for l:statusLine in l:statusesSplit
         " cache git status of files
+        if l:statusLine =~ "^Entering "
+          let l:splitLine = split(l:statusLine)
+          let l:moduleRoot = s:NERDTreeTrimSignalQuotes(l:splitLine[1]) . '/'
+          continue
+        endif
+
         let l:pathStr = substitute(l:statusLine, '...', '', '')
         let l:pathSplit = split(l:pathStr, ' -> ')
         if len(l:pathSplit) == 2
@@ -111,6 +125,7 @@ function! g:NERDTreeGitStatusRefresh()
             continue
         endif
         let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
+        let l:pathStr = resolve(l:moduleRoot . l:pathStr)
         let b:NERDTreeCachedGitFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
         if l:statusKey == 'Ignored'
@@ -141,6 +156,13 @@ function! s:NERDTreeTrimDoubleQuotes(pathStr)
     let l:toReturn = substitute(l:toReturn, '"$', '', '')
     return l:toReturn
 endfunction
+
+function! s:NERDTreeTrimSignalQuotes(pathStr)
+    let l:toReturn = substitute(a:pathStr, "^'", '', '')
+    let l:toReturn = substitute(l:toReturn, "'$", '', '')
+    return l:toReturn
+endfunction
+
 
 " FUNCTION: g:NERDTreeGetGitStatusPrefix(path) {{{2
 " return the indicator of the path
