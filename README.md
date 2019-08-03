@@ -49,20 +49,20 @@ This issue has been fixed.
 
 Use this variable to change symbols.
 
-	```vimscript
-	let g:NERDTreeIndicatorMapCustom = {
-	    \ "Modified"  : "✹",
-	    \ "Staged"    : "✚",
-	    \ "Untracked" : "✭",
-	    \ "Renamed"   : "➜",
-	    \ "Unmerged"  : "═",
-	    \ "Deleted"   : "✖",
-	    \ "Dirty"     : "✗",
-	    \ "Clean"     : "✔︎",
-        \ 'Ignored'   : '☒',
-	    \ "Unknown"   : "?"
-	    \ }
-	 ```
+```vimscript
+let g:NERDTreeIndicatorMapCustom = {
+    \ "Modified"  : "✹",
+    \ "Staged"    : "✚",
+    \ "Untracked" : "✭",
+    \ "Renamed"   : "➜",
+    \ "Unmerged"  : "═",
+    \ "Deleted"   : "✖",
+    \ "Dirty"     : "✗",
+    \ "Clean"     : "✔︎",
+    \ 'Ignored'   : '☒',
+    \ "Unknown"   : "?"
+    \ }
+```
 
 > How to show `ignored` status?
 
