@@ -42,8 +42,8 @@ if !exists('g:NERDTreeShowIgnoredStatus')
     let g:NERDTreeShowIgnoredStatus = 0
 endif
 
-if !exists('s:NERDTreeIndicatorMap')
-    let s:NERDTreeIndicatorMap = {
+if !exists('g:NERDTreeIndicatorMap')
+    let g:NERDTreeIndicatorMap = {
                 \ 'Modified'  : '✹',
                 \ 'Staged'    : '✚',
                 \ 'Untracked' : '✭',
@@ -187,7 +187,7 @@ function! s:NERDTreeGetIndicator(statusKey)
             return l:indicator
         endif
     endif
-    let l:indicator = get(s:NERDTreeIndicatorMap, a:statusKey, '')
+    let l:indicator = get(g:NERDTreeIndicatorMap, a:statusKey, '')
     if l:indicator !=# ''
         return l:indicator
     endif
