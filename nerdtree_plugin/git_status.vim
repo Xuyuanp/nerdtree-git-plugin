@@ -303,17 +303,15 @@ function! s:FileUpdate(fname)
 
     call g:NERDTree.CursorToTreeWin()
     let l:node = b:NERDTree.root.findNode(g:NERDTreePath.New(a:fname))
-    if l:node == {}
-        return
-    endif
-    call l:node.refreshFlags()
-    let l:node = l:node.parent
-    while !empty(l:node)
-        call l:node.refreshDirFlags()
+    if l:node != {}
+        call l:node.refreshFlags()
         let l:node = l:node.parent
-    endwhile
-
-    call NERDTreeRender()
+        while !empty(l:node)
+            call l:node.refreshDirFlags()
+            let l:node = l:node.parent
+        endwhile
+        call NERDTreeRender()
+    endif
 
     exec l:altwinnr . 'wincmd w'
     exec l:winnr . 'wincmd w'
