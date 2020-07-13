@@ -49,7 +49,7 @@ This issue has been fixed.
 
 Use this variable to change symbols.
 
-```vimscript
+```vim
 let g:NERDTreeIndicatorMapCustom = {
     \ "Modified"  : "✹",
     \ "Staged"    : "✚",
