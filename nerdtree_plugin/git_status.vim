@@ -216,7 +216,7 @@ endfunction
 
 " FUNCTION: s:jumpToNextHunk(node) {{{2
 function! s:jumpToNextHunk(node)
-    let l:position = search('\[[^{RO}].*\]', '')
+    let l:position = search('\[[^{RO} ].*\]', '')
     if l:position
         call nerdtree#echo('Jump to next hunk ')
     endif
@@ -224,7 +224,7 @@ endfunction
 
 " FUNCTION: s:jumpToPrevHunk(node) {{{2
 function! s:jumpToPrevHunk(node)
-    let l:position = search('\[[^{RO}].*\]', 'b')
+    let l:position = search('\[[^{RO} ].*\]', 'b')
     if l:position
         call nerdtree#echo('Jump to prev hunk ')
     endif
