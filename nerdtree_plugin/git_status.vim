@@ -77,34 +77,41 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
+
     let l:root = fnamemodify(b:NERDTree.root.path.str(), ':p:gs?\\?/?:S')
-    let l:gitcmd = 'git -c color.status=false -C ' . l:root . ' status -s'
+    let l:git_args = [
+                \ 'git',
+                \ '-C', l:root,
+                \ 'status',
+                \ '--porcelain=v1',
+                \ '--untracked-files=normal'
+                \ ]
     if g:NERDTreeShowIgnoredStatus
-        let l:gitcmd = l:gitcmd . ' --ignored'
+        let l:git_args = l:git_args + ['--ignored=traditional']
     endif
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
-        let l:gitcmd = l:gitcmd . ' --ignore-submodules'
-        if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'
-            let l:gitcmd = l:gitcmd . '=' . g:NERDTreeGitStatusIgnoreSubmodules
+        let l:ignore_args = '--ignore-submodules'
+        if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'none'
+            let l:ignore_args += '=' . g:NERDTreeGitStatusIgnoreSubmodules
         endif
+        let l:git_args += [l:ignore_args]
     endif
-    let l:statusesStr = system(l:gitcmd)
-    let l:statusesSplit = split(l:statusesStr, '\n')
-    if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
-        let l:statusesSplit = []
+    let l:git_cmd = join(l:git_args, ' ')
+    let l:statusLines = systemlist(l:git_cmd)
+
+    if l:statusLines != [] && l:statusLines[0] =~# 'fatal:.*'
+        let l:statusLines = []
         return
     endif
     let b:NOT_A_GIT_REPOSITORY = 0
 
-    for l:statusLine in l:statusesSplit
+    for l:statusLine in l:statusLines
         " cache git status of files
-        let l:pathStr = substitute(l:statusLine, '...', '', '')
-        let l:pathSplit = split(l:pathStr, ' -> ')
-        if len(l:pathSplit) == 2
-            call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
-            let l:pathStr = l:pathSplit[1]
-        else
-            let l:pathStr = l:pathSplit[0]
+        let l:pathStr = l:statusLine[3:]
+        let idx = stridx(l:pathStr, ' -> ')
+        if idx > -1
+            call s:NERDTreeCacheDirtyDir(l:pathStr[:idx])
+            let l:pathStr = l:pathStr[idx+4:]
         endif
         let l:pathStr = s:NERDTreeTrimDoubleQuotes(l:pathStr)
         if l:pathStr =~# '\.\./.*'
@@ -149,8 +156,8 @@ let s:GitStatusCacheTimeExpiry = 2
 let s:GitStatusCacheTime = 0
 function! g:NERDTreeGetGitStatusPrefix(path)
     if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
-        let s:GitStatusCacheTime = localtime()
         call g:NERDTreeGitStatusRefresh()
+        let s:GitStatusCacheTime = localtime()
     endif
     let l:pathStr = a:path.str()
     let l:cwd = b:NERDTree.root.path.str() . nerdtree#slash()
