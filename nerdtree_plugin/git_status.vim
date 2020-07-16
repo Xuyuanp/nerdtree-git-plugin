@@ -338,8 +338,8 @@ function! s:AddHighlighting()
                 \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
                 \ }
 
-    for l:name in keys(l:synmap)
-        exec 'syn match ' . l:name . ' #\[\@<=' . escape(l:synmap[l:name], '~') . '\]\@=# containedin=NERDTreeFlags'
+    for [l:name, l:value] in items(l:synmap)
+        exec 'syn match ' . l:name . ' #\[\@<=' . escape(l:value, '#~*.\') . '\]\@=# containedin=NERDTreeFlags'
     endfor
 
     hi def link NERDTreeGitStatusModified Special
