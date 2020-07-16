@@ -9,6 +9,10 @@
 "              Want To Public License, Version 2, as published by Sam Hocevar.
 "              See http://sam.zoy.org/wtfpl/COPYING for more details.
 " ============================================================================
+if !executable('git')
+    finish
+endif
+
 if exists('g:loaded_nerdtree_git_status')
     finish
 endif
@@ -176,17 +180,6 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     return s:NERDTreeGetIndicator(l:statusKey)
 endfunction
 
-" FUNCTION: s:NERDTreeGetCWDGitStatus() {{{2
-" return the indicator of cwd
-function! g:NERDTreeGetCWDGitStatus()
-    if b:NOT_A_GIT_REPOSITORY
-        return ''
-    elseif b:NERDTreeCachedGitDirtyDir == {} && b:NERDTreeCachedGitFileStatus == {}
-        return s:NERDTreeGetIndicator('Clean')
-    endif
-    return s:NERDTreeGetIndicator('Dirty')
-endfunction
-
 function! s:NERDTreeGetIndicator(statusKey)
     if exists('g:NERDTreeIndicatorMapCustom')
         let l:indicator = get(g:NERDTreeIndicatorMapCustom, a:statusKey, '')
@@ -210,7 +203,7 @@ function! s:NERDTreeGetFileGitStatusKey(us, them)
         return 'Staged'
     elseif a:us ==# 'R'
         return 'Renamed'
-    elseif a:us ==# 'U' || a:them ==# 'U' || a:us ==# 'A' && a:them ==# 'A' || a:us ==# 'D' && a:them ==# 'D'
+    elseif (a:us ==# 'U' && a:them ==# 'U') || (a:us ==# 'A' && a:them ==# 'A') || (a:us ==# 'D' && a:them ==# 'D')
         return 'Unmerged'
     elseif a:them ==# 'D'
         return 'Deleted'
@@ -359,7 +352,5 @@ function! s:SetupListeners()
     call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeGitStatusRefreshListener')
 endfunction
 
-if g:NERDTreeShowGitStatus && executable('git')
-    call s:NERDTreeGitStatusKeyMapping()
-    call s:SetupListeners()
-endif
+call s:NERDTreeGitStatusKeyMapping()
+call s:SetupListeners()
