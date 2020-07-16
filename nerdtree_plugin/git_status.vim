@@ -332,7 +332,7 @@ function! s:AddHighlighting()
                 \ }
 
     for [l:name, l:value] in items(l:synmap)
-        exec 'syn match ' . l:name . ' #\[\@<=' . escape(l:value, '#~*.\') . '\]\@=# containedin=NERDTreeFlags'
+        exec 'syn match ' . l:name . ' #' . escape(l:value, '#~*.\') . '# containedin=NERDTreeFlags'
     endfor
 
     hi def link NERDTreeGitStatusModified Special
