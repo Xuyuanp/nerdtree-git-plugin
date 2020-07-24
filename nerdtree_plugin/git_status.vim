@@ -74,6 +74,14 @@ function! NERDTreeGitStatusRefreshListener(event)
     endif
 endfunction
 
+function! s:git_workdir()
+    let l:output = systemlist('git rev-parse --show-toplevel')
+    if len(l:output) > 0 && l:output[0] !~# 'fatal:.*'
+        return l:output[0]
+    endif
+    return ''
+endfunction
+
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
 function! g:NERDTreeGitStatusRefresh()
@@ -81,76 +89,73 @@ function! g:NERDTreeGitStatusRefresh()
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
 
+    let l:workdir = s:git_workdir()
+    if l:workdir ==# ''
+        return
+    endif
 
-    let l:root = fnamemodify(b:NERDTree.root.path.str(), ':p:gs?\\?/?:S')
+    " TODO: use porcelain=v2
     let l:git_args = [
                 \ 'git',
-                \ '-C', l:root,
                 \ 'status',
                 \ '--porcelain=v1',
-                \ '--untracked-files=normal'
+                \ '--untracked-files=normal',
+                \ '-z'
                 \ ]
     if g:NERDTreeShowIgnoredStatus
         let l:git_args = l:git_args + ['--ignored=traditional']
     endif
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
         let l:ignore_args = '--ignore-submodules'
-        if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'none'
+        if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' ||
+                    \ g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' ||
+                    \ g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked' ||
+                    \ g:NERDTreeGitStatusIgnoreSubmodules ==# 'none'
             let l:ignore_args += '=' . g:NERDTreeGitStatusIgnoreSubmodules
         endif
         let l:git_args += [l:ignore_args]
     endif
     let l:git_cmd = join(l:git_args, ' ')
-    let l:statusLines = systemlist(l:git_cmd)
+    " When the -z option is given, pathnames are printed as is and without any quoting and lines are terminated with a NUL (ASCII 0x00, <C-A> in vim) byte. See `man git-status`
+    let l:statusLines = split(system(l:git_cmd), "\<C-A>")
 
     if l:statusLines != [] && l:statusLines[0] =~# 'fatal:.*'
-        let l:statusLines = []
         return
     endif
     let b:NOT_A_GIT_REPOSITORY = 0
 
+    let l:is_rename = v:false
     for l:statusLine in l:statusLines
         " cache git status of files
-        let l:pathStr = l:statusLine[3:]
-        let idx = stridx(l:pathStr, ' -> ')
-        if idx > -1
-            call s:NERDTreeCacheDirtyDir(l:pathStr[:idx])
-            let l:pathStr = l:pathStr[idx+4:]
-        endif
-        let l:pathStr = s:NERDTreeTrimDoubleQuotes(l:pathStr)
-        if l:pathStr =~# '\.\./.*'
+        if l:is_rename
+            call s:NERDTreeCacheDirtyDir(l:workdir, l:workdir . '/' . l:statusLine)
+            let l:is_rename = v:false
             continue
         endif
+        let l:pathStr = l:workdir . '/' . l:statusLine[3:]
         let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
-        let b:NERDTreeCachedGitFileStatus[fnameescape(l:pathStr)] = l:statusKey
+        if l:statusKey ==# 'Renamed'
+            let l:is_rename = v:true
+        endif
+        let b:NERDTreeCachedGitFileStatus[l:pathStr] = l:statusKey
 
         if l:statusKey == 'Ignored'
             if isdirectory(l:pathStr)
-                let b:NERDTreeCachedGitDirtyDir[fnameescape(l:pathStr)] = l:statusKey
+                let b:NERDTreeCachedGitDirtyDir[l:pathStr] = l:statusKey
             endif
         else
-            call s:NERDTreeCacheDirtyDir(l:pathStr)
+            call s:NERDTreeCacheDirtyDir(l:workdir, l:pathStr)
         endif
     endfor
 endfunction
 
-function! s:NERDTreeCacheDirtyDir(pathStr)
+function! s:NERDTreeCacheDirtyDir(root, pathStr)
     " cache dirty dir
-    let l:dirtyPath = s:NERDTreeTrimDoubleQuotes(a:pathStr)
-    if l:dirtyPath =~# '\.\./.*'
-        return
-    endif
-    let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*$', '/', '')
-    while l:dirtyPath =~# '.\+/.*' && has_key(b:NERDTreeCachedGitDirtyDir, fnameescape(l:dirtyPath)) == 0
-        let b:NERDTreeCachedGitDirtyDir[fnameescape(l:dirtyPath)] = 'Dirty'
-        let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*/$', '/', '')
+    let l:dirtyPath = fnamemodify(a:pathStr, ':p:h')
+    while l:dirtyPath !=# a:root && has_key(b:NERDTreeCachedGitDirtyDir, l:dirtyPath) == 0
+        let b:NERDTreeCachedGitDirtyDir[l:dirtyPath] = 'Dirty'
+        let l:dirtyPath = fnamemodify(l:dirtyPath, ':h')
     endwhile
-endfunction
-
-function! s:NERDTreeTrimDoubleQuotes(pathStr)
-    let l:toReturn = substitute(a:pathStr, '^"', '', '')
-    let l:toReturn = substitute(l:toReturn, '"$', '', '')
-    return l:toReturn
 endfunction
 
 " FUNCTION: g:NERDTreeGetGitStatusPrefix(path) {{{2
@@ -164,18 +169,13 @@ function! g:NERDTreeGetGitStatusPrefix(path)
         let s:GitStatusCacheTime = localtime()
     endif
     let l:pathStr = a:path.str()
-    let l:cwd = b:NERDTree.root.path.str() . nerdtree#slash()
-    if nerdtree#runningWindows()
-        let l:pathStr = a:path.WinToUnixPath(l:pathStr)
-        let l:cwd = a:path.WinToUnixPath(l:cwd)
-    endif
-    let l:cwd = substitute(l:cwd, '\~', '\\~', 'g')
-    let l:pathStr = substitute(l:pathStr, l:cwd, '', '')
-    let l:statusKey = ''
     if a:path.isDirectory
-        let l:statusKey = get(b:NERDTreeCachedGitDirtyDir, fnameescape(l:pathStr . '/'), '')
+        let l:statusKey = get(b:NERDTreeCachedGitDirtyDir, l:pathStr, '')
     else
-        let l:statusKey = get(b:NERDTreeCachedGitFileStatus, fnameescape(l:pathStr), '')
+        let l:statusKey = get(b:NERDTreeCachedGitFileStatus, l:pathStr, '')
+    endif
+    if l:statusKey ==# ''
+        return ''
     endif
     return s:NERDTreeGetIndicator(l:statusKey)
 endfunction
