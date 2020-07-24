@@ -94,11 +94,14 @@ function! g:NERDTreeGitStatusRefresh()
         return
     endif
 
-    " TODO: use porcelain=v2
+    let l:porcelainVersion = 'v2'
+
+    let ProcessFunc = function('s:process_line_' . l:porcelainVersion)
+
     let l:git_args = [
                 \ 'git',
                 \ 'status',
-                \ '--porcelain=v1',
+                \ '--porcelain' . (l:porcelainVersion ==# 'v2' ? '=v2' : ''),
                 \ '--untracked-files=normal',
                 \ '-z'
                 \ ]
@@ -132,11 +135,10 @@ function! g:NERDTreeGitStatusRefresh()
             let l:is_rename = v:false
             continue
         endif
-        let l:pathStr = l:workdir . '/' . l:statusLine[3:]
-        let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
-        if l:statusKey ==# 'Renamed'
-            let l:is_rename = v:true
-        endif
+        let [l:pathStr, l:statusKey] = ProcessFunc(l:statusLine)
+
+        let l:pathStr = l:workdir . '/' . l:pathStr
+        let l:is_rename = l:statusKey ==# 'Renamed'
         let b:NERDTreeCachedGitFileStatus[l:pathStr] = l:statusKey
 
         if l:statusKey == 'Ignored'
@@ -147,6 +149,35 @@ function! g:NERDTreeGitStatusRefresh()
             call s:NERDTreeCacheDirtyDir(l:workdir, l:pathStr)
         endif
     endfor
+endfunction
+
+function! s:process_line_v1(sline)
+    let l:pathStr = a:sline[3:]
+    let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[0], a:sline[1])
+    return [l:pathStr, l:statusKey]
+endfunction
+
+function! s:process_line_v2(sline)
+        if a:sline[0] ==# '1'
+            let l:statusKey = s:NERDTreeGetFileGitStatusKeyV2(a:sline[2], a:sline[3])
+            let l:pathStr = a:sline[113:]
+        elseif a:sline[0] ==# '2'
+            let l:statusKey = 'Renamed'
+            let l:pathStr = a:sline[113:]
+            let l:pathStr = l:pathStr[stridx(l:pathStr, ' ')+1:]
+        elseif a:sline[0] ==# 'u'
+            let l:statusKey = 'Unmerged'
+            let l:pathStr = a:sline[161:]
+        elseif a:sline[0] ==# '?'
+            let l:statusKey = 'Untracked'
+            let l:pathStr = a:sline[2:]
+        elseif a:sline[0] ==# '!'
+            let l:statusKey = 'Ignored'
+            let l:pathStr = a:sline[2:]
+        else
+            throw '[nerdtree_git_status] unknown status'
+        endif
+        return [l:pathStr, l:statusKey]
 endfunction
 
 function! s:NERDTreeCacheDirtyDir(root, pathStr)
@@ -194,6 +225,18 @@ function! s:NERDTreeGetIndicator(statusKey)
     return ''
 endfunction
 
+function! s:NERDTreeGetFileGitStatusKeyV2(us, them)
+    if a:us ==# '.' && a:them ==# 'M'
+        return 'Modified'
+    elseif a:us =~# '[MAC]'
+        return 'Staged'
+    elseif a:them ==# 'D'
+        return 'Deleted'
+    else
+        return 'Unknown'
+    endif
+endfunction
+
 function! s:NERDTreeGetFileGitStatusKey(us, them)
     if a:us ==# '?' && a:them ==# '?'
         return 'Untracked'
@@ -218,7 +261,7 @@ endfunction
 function! s:jumpToNextHunk(node)
     let l:position = search('\[[^{RO} ].*\]', '')
     if l:position
-        call nerdtree#echo('Jump to next hunk ')
+        call nerdtree#echo('Jump to next hunk')
     endif
 endfunction
 
@@ -226,7 +269,7 @@ endfunction
 function! s:jumpToPrevHunk(node)
     let l:position = search('\[[^{RO} ].*\]', 'b')
     if l:position
-        call nerdtree#echo('Jump to prev hunk ')
+        call nerdtree#echo('Jump to prev hunk')
     endif
 endfunction
 
@@ -286,6 +329,7 @@ function! s:CursorHoldUpdate()
 endfunction
 
 augroup nerdtreegitplugin
+    autocmd!
     autocmd BufWritePost * call s:FileUpdate(expand('%:p'))
 augroup END
 " FUNCTION: s:FileUpdate(fname) {{{2
