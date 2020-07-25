@@ -61,6 +61,57 @@ if !exists('s:NERDTreeIndicatorMap')
                 \ }
 endif
 
+function! s:get_git_version() abort
+    let l:output = systemlist('git --version')[0]
+    let l:version = split(l:output[12:], '\.')
+    let l:major = l:version[0]
+    let l:minor = l:version[1]
+    return [major, minor]
+endfunction
+
+function! s:choose_porcelain_version(git_version) abort
+    " git status supports --porcelain=v2 since v2.11.0
+    let [major, minor] = a:git_version
+    if major < 2
+        return 'v1'
+    elseif minor < 11
+        return 'v1'
+    endif
+    return 'v2'
+endfunction
+
+function! s:process_line_v1(sline)
+    let l:pathStr = a:sline[3:]
+    let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[0], a:sline[1])
+    return [l:pathStr, l:statusKey]
+endfunction
+
+function! s:process_line_v2(sline)
+        if a:sline[0] ==# '1'
+            let l:statusKey = s:NERDTreeGetFileGitStatusKeyV2(a:sline[2], a:sline[3])
+            let l:pathStr = a:sline[113:]
+        elseif a:sline[0] ==# '2'
+            let l:statusKey = 'Renamed'
+            let l:pathStr = a:sline[113:]
+            let l:pathStr = l:pathStr[stridx(l:pathStr, ' ')+1:]
+        elseif a:sline[0] ==# 'u'
+            let l:statusKey = 'Unmerged'
+            let l:pathStr = a:sline[161:]
+        elseif a:sline[0] ==# '?'
+            let l:statusKey = 'Untracked'
+            let l:pathStr = a:sline[2:]
+        elseif a:sline[0] ==# '!'
+            let l:statusKey = 'Ignored'
+            let l:pathStr = a:sline[2:]
+        else
+            throw '[nerdtree_git_status] unknown status'
+        endif
+        return [l:pathStr, l:statusKey]
+endfunction
+
+
+let s:porcelainVersion = s:choose_porcelain_version(s:get_git_version())
+let s:process_line = function('s:process_line_' . s:porcelainVersion)
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
@@ -84,7 +135,7 @@ endfunction
 
 " FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
 " refresh cached git status
-function! g:NERDTreeGitStatusRefresh()
+function! g:NERDTreeGitStatusRefresh() abort
     let b:NERDTreeCachedGitFileStatus = {}
     let b:NERDTreeCachedGitDirtyDir   = {}
     let b:NOT_A_GIT_REPOSITORY        = 1
@@ -94,14 +145,14 @@ function! g:NERDTreeGitStatusRefresh()
         return
     endif
 
-    let l:porcelainVersion = 'v2'
-
-    let ProcessFunc = function('s:process_line_' . l:porcelainVersion)
+    " let l:porcelainVersion = 'v2'
+    "
+    " let ProcessFunc = function('s:process_line_' . l:porcelainVersion)
 
     let l:git_args = [
                 \ 'git',
                 \ 'status',
-                \ '--porcelain' . (l:porcelainVersion ==# 'v2' ? '=v2' : ''),
+                \ '--porcelain' . (s:porcelainVersion ==# 'v2' ? '=v2' : ''),
                 \ '--untracked-files=normal',
                 \ '-z'
                 \ ]
@@ -135,7 +186,7 @@ function! g:NERDTreeGitStatusRefresh()
             let l:is_rename = v:false
             continue
         endif
-        let [l:pathStr, l:statusKey] = ProcessFunc(l:statusLine)
+        let [l:pathStr, l:statusKey] = s:process_line(l:statusLine)
 
         let l:pathStr = l:workdir . '/' . l:pathStr
         let l:is_rename = l:statusKey ==# 'Renamed'
@@ -149,35 +200,6 @@ function! g:NERDTreeGitStatusRefresh()
             call s:NERDTreeCacheDirtyDir(l:workdir, l:pathStr)
         endif
     endfor
-endfunction
-
-function! s:process_line_v1(sline)
-    let l:pathStr = a:sline[3:]
-    let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[0], a:sline[1])
-    return [l:pathStr, l:statusKey]
-endfunction
-
-function! s:process_line_v2(sline)
-        if a:sline[0] ==# '1'
-            let l:statusKey = s:NERDTreeGetFileGitStatusKeyV2(a:sline[2], a:sline[3])
-            let l:pathStr = a:sline[113:]
-        elseif a:sline[0] ==# '2'
-            let l:statusKey = 'Renamed'
-            let l:pathStr = a:sline[113:]
-            let l:pathStr = l:pathStr[stridx(l:pathStr, ' ')+1:]
-        elseif a:sline[0] ==# 'u'
-            let l:statusKey = 'Unmerged'
-            let l:pathStr = a:sline[161:]
-        elseif a:sline[0] ==# '?'
-            let l:statusKey = 'Untracked'
-            let l:pathStr = a:sline[2:]
-        elseif a:sline[0] ==# '!'
-            let l:statusKey = 'Ignored'
-            let l:pathStr = a:sline[2:]
-        else
-            throw '[nerdtree_git_status] unknown status'
-        endif
-        return [l:pathStr, l:statusKey]
 endfunction
 
 function! s:NERDTreeCacheDirtyDir(root, pathStr)
