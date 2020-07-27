@@ -145,10 +145,6 @@ function! g:NERDTreeGitStatusRefresh() abort
         return
     endif
 
-    " let l:porcelainVersion = 'v2'
-    "
-    " let ProcessFunc = function('s:process_line_' . l:porcelainVersion)
-
     let l:git_args = [
                 \ 'git',
                 \ 'status',
@@ -223,7 +219,10 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     endif
     let l:pathStr = a:path.str()
     if a:path.isDirectory
-        let l:statusKey = get(b:NERDTreeCachedGitDirtyDir, l:pathStr, '')
+        let l:statusKey = get(b:NERDTreeCachedGitFileStatus, l:pathStr . '/', '')
+        if l:statusKey ==# ''
+            let l:statusKey = get(b:NERDTreeCachedGitDirtyDir, l:pathStr, '')
+        endif
     else
         let l:statusKey = get(b:NERDTreeCachedGitFileStatus, l:pathStr, '')
     endif
