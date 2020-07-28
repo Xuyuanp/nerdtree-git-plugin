@@ -9,60 +9,110 @@
 "              Want To Public License, Version 2, as published by Sam Hocevar.
 "              See http://sam.zoy.org/wtfpl/COPYING for more details.
 " ============================================================================
-if !executable('git')
-    finish
-endif
-
 if exists('g:loaded_nerdtree_git_status')
     finish
 endif
 let g:loaded_nerdtree_git_status = 1
 
-if !exists('g:NERDTreeShowGitStatus')
-    let g:NERDTreeShowGitStatus = 1
-endif
+" stolen from nerdtree
+"Function: s:initVariable() function {{{2
+"This function is used to initialise a given variable to a given value. The
+"variable is only initialised if it does not exist prior
+"
+"Args:
+"var: the name of the var to be initialised
+"value: the value to initialise var to
+"
+"Returns:
+"1 if the var is set, 0 otherwise
+function! s:initVariable(var, value)
+    if !exists(a:var)
+        exec 'let ' . a:var . ' = ' . "'" . substitute(a:value, "'", "''", 'g') . "'"
+        return 1
+    endif
+    return 0
+endfunction
 
-if g:NERDTreeShowGitStatus == 0
+function! s:migrateVariable(oldv, newv)
+    if exists(a:oldv)
+        exec 'let ' . a:newv . ' = ' . a:oldv
+        return 1
+    endif
+    return 0
+endfunction
+
+let s:default_vals = {
+            \ 'g:NERDTreeGitStatusEnable':             1,
+            \ 'g:NERDTreeGitStatusUpdateOnWrite':      1,
+            \ 'g:NERDTreeGitStatusUpdateOnCursorHold': 1,
+            \ 'g:NERDTreeGitStatusShowIgnored':        0,
+            \ 'g:NERDTreeGitStatusUseNerdFonts':       0,
+            \ 'g:NERDTreeGitStatusMapNextHunk':        ']c',
+            \ 'g:NERDTreeGitStatusMapPrevHunk':        '[c',
+            \ 'g:NERDTreeGitStatusUntrackedFilesMode': 'normal',
+            \ 'g:NERDTreeGitStatusGitBinPath':         'git',
+            \ }
+
+for [var, value] in items(s:default_vals)
+    call s:initVariable(var, value)
+endfor
+
+let s:need_migrate_vals = {
+            \ 'g:NERDTreeShowGitStatus':      'g:NERDTreeGitStatusEnable',
+            \ 'g:NERDTreeUpdateOnWrite':      'g:NERDTreeGitStatusUpdateOnWrite',
+            \ 'g:NERDTreeUpdateOnCursorHold': 'g:NERDTreeGitStatusUpdateOnCursorHold',
+            \ 'g:NERDTreeMapNextHunk':        'g:NERDTreeGitStatusMapNextHunk',
+            \ 'g:NERDTreeMapPrevHunk':        'g:NERDTreeGitStatusMapPrevHunk',
+            \ 'g:NERDTreeShowIgnoredStatus':  'g:NERDTreeGitStatusShowIgnored',
+            \ 'g:NERDTreeIndicatorMapCustom': 'g:NERDTreeGitStatusIndicatorMapCustom',
+            \ }
+
+for [oldv, newv] in items(s:need_migrate_vals)
+    call s:migrateVariable(oldv, newv)
+endfor
+
+if !g:NERDTreeGitStatusEnable
     finish
 endif
 
-if !exists('g:NERDTreeMapNextHunk')
-    let g:NERDTreeMapNextHunk = ']c'
+if !executable(g:NERDTreeGitStatusGitBinPath)
+    call nerdtree#echoError('[git-plugin] git command not found')
+    finish
 endif
 
-if !exists('g:NERDTreeMapPrevHunk')
-    let g:NERDTreeMapPrevHunk = '[c'
-endif
 
-if !exists('g:NERDTreeUpdateOnWrite')
-    let g:NERDTreeUpdateOnWrite = 1
-endif
-
-if !exists('g:NERDTreeUpdateOnCursorHold')
-    let g:NERDTreeUpdateOnCursorHold = 1
-endif
-
-if !exists('g:NERDTreeShowIgnoredStatus')
-    let g:NERDTreeShowIgnoredStatus = 0
-endif
-
-if !exists('s:NERDTreeIndicatorMap')
+if g:NERDTreeGitStatusUseNerdFonts
     let s:NERDTreeIndicatorMap = {
-                \ 'Modified'  : '✹',
-                \ 'Staged'    : '✚',
-                \ 'Untracked' : '✭',
-                \ 'Renamed'   : '➜',
-                \ 'Unmerged'  : '═',
-                \ 'Deleted'   : '✖',
-                \ 'Dirty'     : '✗',
-                \ 'Clean'     : '✔︎',
-                \ 'Ignored'   : '☒',
-                \ 'Unknown'   : '?'
+                \ 'Modified'  :'',
+                \ 'Staged'    :'',
+                \ 'Untracked' :'',
+                \ 'Renamed'   :'',
+                \ 'Unmerged'  :'',
+                \ 'Dirty'     :'',
+                \ 'Ignored'   :'',
+                \
+                \ 'Clean'     :'',
+                \ 'Deleted'   :'',
+                \ 'Unknown'   :''
+                \ }
+else
+    let s:NERDTreeIndicatorMap = {
+                \ 'Modified'  :'✹',
+                \ 'Staged'    :'✚',
+                \ 'Untracked' :'✭',
+                \ 'Renamed'   :'➜',
+                \ 'Unmerged'  :'═',
+                \ 'Dirty'     :'✗',
+                \ 'Ignored'   :'☒',
+                \
+                \ 'Clean'     :'✔︎',
+                \ 'Deleted'   :'✖',
+                \ 'Unknown'   :'?'
                 \ }
 endif
 
 function! s:get_git_version() abort
-    let l:output = systemlist('git --version')[0]
+    let l:output = systemlist(g:NERDTreeGitStatusGitBinPath . ' --version')[0] " Output: git version v2.27.0
     let l:version = split(l:output[12:], '\.')
     let l:major = l:version[0]
     let l:minor = l:version[1]
@@ -104,7 +154,7 @@ function! s:process_line_v2(sline)
             let l:statusKey = 'Ignored'
             let l:pathStr = a:sline[2:]
         else
-            throw '[nerdtree_git_status] unknown status'
+            throw '[nerdtree_git_status] unknown status: ' . a:sline
         endif
         return [l:pathStr, l:statusKey]
 endfunction
@@ -118,7 +168,7 @@ function! NERDTreeGitStatusRefreshListener(event)
         call g:NERDTreeGitStatusRefresh()
     endif
     let l:path = a:event.subject
-    let l:flag = g:NERDTreeGetGitStatusPrefix(l:path)
+    let l:flag = g:NERDTreeGitStatusGetPrefix(l:path)
     call l:path.flagSet.clearFlags('git')
     if l:flag !=# ''
         call l:path.flagSet.addFlag('git', l:flag)
@@ -126,7 +176,7 @@ function! NERDTreeGitStatusRefreshListener(event)
 endfunction
 
 function! s:git_workdir()
-    let l:output = systemlist('git rev-parse --show-toplevel')
+    let l:output = systemlist(g:NERDTreeGitStatusGitBinPath . ' rev-parse --show-toplevel')
     if len(l:output) > 0 && l:output[0] !~# 'fatal:.*'
         return l:output[0]
     endif
@@ -146,13 +196,13 @@ function! g:NERDTreeGitStatusRefresh() abort
     endif
 
     let l:git_args = [
-                \ 'git',
+                \ g:NERDTreeGitStatusGitBinPath,
                 \ 'status',
                 \ '--porcelain' . (s:porcelainVersion ==# 'v2' ? '=v2' : ''),
-                \ '--untracked-files=normal',
+                \ '--untracked-files=' . g:NERDTreeGitStatusUntrackedFilesMode,
                 \ '-z'
                 \ ]
-    if g:NERDTreeShowIgnoredStatus
+    if g:NERDTreeGitStatusShowIgnored
         let l:git_args = l:git_args + ['--ignored=traditional']
     endif
     if exists('g:NERDTreeGitStatusIgnoreSubmodules')
@@ -207,12 +257,12 @@ function! s:NERDTreeCacheDirtyDir(root, pathStr)
     endwhile
 endfunction
 
-" FUNCTION: g:NERDTreeGetGitStatusPrefix(path) {{{2
+" FUNCTION: g:NERDTreeGitStatusGetPrefix(path) {{{2
 " return the indicator of the path
 " Args: path
 let s:GitStatusCacheTimeExpiry = 2
 let s:GitStatusCacheTime = 0
-function! g:NERDTreeGetGitStatusPrefix(path)
+function! g:NERDTreeGitStatusGetPrefix(path)
     if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
         call g:NERDTreeGitStatusRefresh()
         let s:GitStatusCacheTime = localtime()
@@ -229,10 +279,10 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     if l:statusKey ==# ''
         return ''
     endif
-    return s:NERDTreeGetIndicator(l:statusKey)
+    return s:NERDTreeGitStatusGetIndicator(l:statusKey)
 endfunction
 
-function! s:NERDTreeGetIndicator(statusKey)
+function! s:NERDTreeGitStatusGetIndicator(statusKey)
     if exists('g:NERDTreeIndicatorMapCustom')
         let l:indicator = get(g:NERDTreeIndicatorMapCustom, a:statusKey, '')
         if l:indicator !=# ''
@@ -282,7 +332,7 @@ endfunction
 function! s:jumpToNextHunk(node)
     let l:position = search('\[[^{RO} ].*\]', '')
     if l:position
-        call nerdtree#echo('Jump to next hunk')
+        call nerdtree#echo('[git-status] Jump to next hunk')
     endif
 endfunction
 
@@ -290,7 +340,7 @@ endfunction
 function! s:jumpToPrevHunk(node)
     let l:position = search('\[[^{RO} ].*\]', 'b')
     if l:position
-        call nerdtree#echo('Jump to prev hunk')
+        call nerdtree#echo('[git-status] Jump to prev hunk')
     endif
 endfunction
 
@@ -307,28 +357,21 @@ function! s:NERDTreeGitStatusKeyMapping()
     let l:s = '<SNR>' . s:SID() . '_'
 
     call NERDTreeAddKeyMap({
-        \ 'key': g:NERDTreeMapNextHunk,
+        \ 'key': g:NERDTreeGitStatusMapNextHunk,
         \ 'scope': 'Node',
         \ 'callback': l:s.'jumpToNextHunk',
         \ 'quickhelpText': 'Jump to next git hunk' })
 
     call NERDTreeAddKeyMap({
-        \ 'key': g:NERDTreeMapPrevHunk,
+        \ 'key': g:NERDTreeGitStatusMapPrevHunk,
         \ 'scope': 'Node',
         \ 'callback': l:s.'jumpToPrevHunk',
         \ 'quickhelpText': 'Jump to prev git hunk' })
 
 endfunction
 
-augroup nerdtreegitplugin
-    autocmd CursorHold * silent! call s:CursorHoldUpdate()
-augroup END
 " FUNCTION: s:CursorHoldUpdate() {{{2
 function! s:CursorHoldUpdate()
-    if g:NERDTreeUpdateOnCursorHold != 1
-        return
-    endif
-
     if !g:NERDTree.IsOpen()
         return
     endif
@@ -349,16 +392,8 @@ function! s:CursorHoldUpdate()
     exec l:winnr . 'wincmd w'
 endfunction
 
-augroup nerdtreegitplugin
-    autocmd!
-    autocmd BufWritePost * call s:FileUpdate(expand('%:p'))
-augroup END
 " FUNCTION: s:FileUpdate(fname) {{{2
 function! s:FileUpdate(fname)
-    if g:NERDTreeUpdateOnWrite != 1
-        return
-    endif
-
     if !g:NERDTree.IsOpen()
         return
     endif
@@ -387,13 +422,13 @@ augroup AddHighlighting
 augroup END
 function! s:AddHighlighting()
     let l:synmap = {
-                \ 'NERDTreeGitStatusModified'    : s:NERDTreeGetIndicator('Modified'),
-                \ 'NERDTreeGitStatusStaged'      : s:NERDTreeGetIndicator('Staged'),
-                \ 'NERDTreeGitStatusUntracked'   : s:NERDTreeGetIndicator('Untracked'),
-                \ 'NERDTreeGitStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
-                \ 'NERDTreeGitStatusIgnored'     : s:NERDTreeGetIndicator('Ignored'),
-                \ 'NERDTreeGitStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
-                \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
+                \ 'NERDTreeGitStatusModified':  s:NERDTreeGitStatusGetIndicator('Modified'),
+                \ 'NERDTreeGitStatusStaged':    s:NERDTreeGitStatusGetIndicator('Staged'),
+                \ 'NERDTreeGitStatusUntracked': s:NERDTreeGitStatusGetIndicator('Untracked'),
+                \ 'NERDTreeGitStatusRenamed':   s:NERDTreeGitStatusGetIndicator('Renamed'),
+                \ 'NERDTreeGitStatusIgnored':   s:NERDTreeGitStatusGetIndicator('Ignored'),
+                \ 'NERDTreeGitStatusDirDirty':  s:NERDTreeGitStatusGetIndicator('Dirty'),
+                \ 'NERDTreeGitStatusDirClean':  s:NERDTreeGitStatusGetIndicator('Clean')
                 \ }
 
     for [l:name, l:value] in items(l:synmap)
@@ -406,9 +441,8 @@ function! s:AddHighlighting()
     hi def link NERDTreeGitStatusUnmerged Label
     hi def link NERDTreeGitStatusUntracked Comment
     hi def link NERDTreeGitStatusDirDirty Tag
+    hi def link NERDTreeGitStatusIgnored SpecialKey
     hi def link NERDTreeGitStatusDirClean DiffAdd
-    " TODO: use diff color
-    hi def link NERDTreeGitStatusIgnored DiffAdd
 endfunction
 
 function! s:SetupListeners()
@@ -416,6 +450,17 @@ function! s:SetupListeners()
     call g:NERDTreePathNotifier.AddListener('refresh', 'NERDTreeGitStatusRefreshListener')
     call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeGitStatusRefreshListener')
 endfunction
+
+augroup nerdtreegitplugin
+    autocmd!
+    if g:NERDTreeGitStatusUpdateOnWrite
+        autocmd BufWritePost * silent! call s:FileUpdate(expand('%:p'))
+    endif
+
+    if g:NERDTreeGitStatusUpdateOnCursorHold
+        autocmd CursorHold * silent! call s:CursorHoldUpdate()
+    endif
+augroup END
 
 call s:NERDTreeGitStatusKeyMapping()
 call s:SetupListeners()
