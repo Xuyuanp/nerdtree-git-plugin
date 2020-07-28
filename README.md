@@ -1,38 +1,20 @@
 nerdtree-git-plugin
 ===================
 
-A plugin of NERDTree showing git status flags. Works with the **LATEST** version of NERDTree.
+A plugin of [NERDTree](https://github.com/preservim/nerdtree) showing git status flags.
 
 The original project [git-nerdtree](https://github.com/Xuyuanp/git-nerdtree) will not be maintained any longer.
-
 
 ![Imgur](http://i.imgur.com/jSCwGjU.gif?1)
 
 ## Installation
 
-For Pathogen
+Use your favorite package manager. Here is the example of using [vim-plug](https://github.com/junegunn/vim-plug)
 
-`git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdtree-git-plugin`
-
-Now reload the `vim`
-
-For Vundle
-
-`Plugin 'scrooloose/nerdtree'`
-
-`Plugin 'Xuyuanp/nerdtree-git-plugin'`
-
-For NeoBundle
-
-`NeoBundle 'scrooloose/nerdtree'`
-
-`NeoBundle 'Xuyuanp/nerdtree-git-plugin'`
-
-For Plug
-
-`Plug 'scrooloose/nerdtree'`
-
-`Plug 'Xuyuanp/nerdtree-git-plugin'`
+```vim script
+Plug 'preservim/nerdtree' |
+            \ Plug 'Xuyuanp/nerdtree-git-plugin'
+```
 
 ## FAQ
 
@@ -50,26 +32,53 @@ This issue has been fixed.
 Use this variable to change symbols.
 
 ```vim
-let g:NERDTreeIndicatorMapCustom = {
+let g:NERDTreeGitStatusIndicatorMapCustom = {
     \ "Modified"  : "✹",
     \ "Staged"    : "✚",
     \ "Untracked" : "✭",
     \ "Renamed"   : "➜",
     \ "Unmerged"  : "═",
-    \ "Deleted"   : "✖",
     \ "Dirty"     : "✗",
-    \ "Clean"     : "✔︎",
     \ "Ignored"   : "☒",
-    \ "Unknown"   : "?"
     \ }
+```
+
+There is a predefined map used *nerdfonts*, to enable it
+
+```vim
+let g:NERDTreeGitStatusUseNerdFonts = 1 " you should install nerdfonts by yourself. default: 0
 ```
 
 > How to show `ignored` status?
 
-`let g:NERDTreeShowIgnoredStatus = 1` (a heavy feature may cost much more time)
+```vim
+let g:NERDTreeGitStatusShowIgnored = 1 " a heavy feature may cost much more time. default: 0
+```
+
+> How to cooperate with [vim-devicons](https://github.com/ryanoasis/vim-devicons)
+
+```vim
+Plug 'preservim/nerdtree' |
+            \ Plug 'Xuyuanp/nerdtree-git-plugin' |
+            \ Plug 'ryanoasis/vim-devicons'
+```
+
+Make sure they are in the right order.
+
+> How to indicate every single `untracked` file under an `untracked` dir?
+
+```vim
+let g:NERDTreeGitStatusUntrackedFilesMode = 'all' " a heave feature too. default: normal
+```
+
+> How to set `git` executable file path?
+
+```vim
+let g:NERDTreeGitStatusGitBinPath = '/your/file/path' " defualt: git (auto find in path)
+```
 
 ## Credits
 
 *  [scrooloose](https://github.com/scrooloose): Open API for me.
-*  [git_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
+*  [git\_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
 *  [PickRelated](https://github.com/PickRelated): Add custom indicators & Review code.
