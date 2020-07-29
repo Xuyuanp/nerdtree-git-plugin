@@ -160,9 +160,8 @@ function! s:process_line_v2(sline) abort
         return [l:pathStr, l:statusKey]
 endfunction
 
-
-let s:porcelainVersion = s:choose_porcelain_version(s:get_git_version())
-let s:process_line = function('s:process_line_' . s:porcelainVersion)
+let s:porcelain_version = s:choose_porcelain_version(s:get_git_version())
+let s:process_line = function('s:process_line_' . s:porcelain_version)
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
@@ -199,7 +198,7 @@ function! g:NERDTreeGitStatusRefresh() abort
     let l:git_args = [
                 \ g:NERDTreeGitStatusGitBinPath,
                 \ 'status',
-                \ '--porcelain' . (s:porcelainVersion ==# 'v2' ? '=v2' : ''),
+                \ '--porcelain' . (s:porcelain_version ==# 'v2' ? '=v2' : ''),
                 \ '--untracked-files=' . g:NERDTreeGitStatusUntrackedFilesMode,
                 \ '-z'
                 \ ]
