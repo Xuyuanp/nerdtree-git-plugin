@@ -131,15 +131,15 @@ function! s:choose_porcelain_version(git_version) abort
     return 'v2'
 endfunction
 
-function! s:process_line_v1(sline)
+function! s:process_line_v1(sline) abort
     let l:pathStr = a:sline[3:]
     let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[0], a:sline[1])
     return [l:pathStr, l:statusKey]
 endfunction
 
-function! s:process_line_v2(sline)
+function! s:process_line_v2(sline) abort
         if a:sline[0] ==# '1'
-            let l:statusKey = s:NERDTreeGetFileGitStatusKeyV2(a:sline[2], a:sline[3])
+            let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[2], a:sline[3])
             let l:pathStr = a:sline[113:]
         elseif a:sline[0] ==# '2'
             let l:statusKey = 'Renamed'
@@ -312,33 +312,45 @@ function! s:NERDTreeGitStatusGetIndicator(statusKey)
     return ''
 endfunction
 
-function! s:NERDTreeGetFileGitStatusKeyV2(us, them)
-    if a:us ==# '.' && a:them ==# 'M'
-        return 'Modified'
-    elseif a:us =~# '[MAC]'
-        return 'Staged'
-    elseif a:them ==# 'D'
-        return 'Deleted'
-    else
-        return 'Unknown'
-    endif
-endfunction
+let s:unmerged_status = {
+            \ 'DD': 1,
+            \ 'AU': 1,
+            \ 'UD': 1,
+            \ 'UA': 1,
+            \ 'DU': 1,
+            \ 'AA': 1,
+            \ 'UU': 1,
+            \ }
 
+" Function: s:NERDTreeGetFileGitStatusKey() function {{{2
+" This function is used to get git status key
+"
+" Args:
+" us: index tree
+" them: work tree
+"
+"Returns:
+" status key
 function! s:NERDTreeGetFileGitStatusKey(us, them)
-    if a:us ==# '?' && a:them ==# '?'
-        return 'Untracked'
-    elseif a:us ==# ' ' && a:them ==# 'M'
-        return 'Modified'
-    elseif a:us =~# '[MAC]'
-        return 'Staged'
-    elseif a:us ==# 'R'
-        return 'Renamed'
-    elseif (a:us ==# 'U' && a:them ==# 'U') || (a:us ==# 'A' && a:them ==# 'A') || (a:us ==# 'D' && a:them ==# 'D')
+    let l:xy = a:us . a:them
+    if get(s:unmerged_status, l:xy, 0)
         return 'Unmerged'
+    elseif l:xy ==# '??'
+        return 'Untracked'
+    elseif l:xy ==# '!!'
+        return 'Ignored'
+    elseif a:them ==# 'M'
+        return 'Modified'
     elseif a:them ==# 'D'
         return 'Deleted'
-    elseif a:us ==# '!'
-        return 'Ignored'
+    elseif a:them =~# '[RC]'
+        return 'Renamed'
+    elseif a:us ==# 'D'
+        return 'Deleted'
+    elseif a:us =~# '[MA]'
+        return 'Staged'
+    elseif a:us =~# '[RC]'
+        return 'Renamed'
     else
         return 'Unknown'
     endif
@@ -442,6 +454,7 @@ function! s:AddHighlighting()
                 \ 'NERDTreeGitStatusStaged':    s:NERDTreeGitStatusGetIndicator('Staged'),
                 \ 'NERDTreeGitStatusUntracked': s:NERDTreeGitStatusGetIndicator('Untracked'),
                 \ 'NERDTreeGitStatusRenamed':   s:NERDTreeGitStatusGetIndicator('Renamed'),
+                \ 'NERDTreeGitStatusDeleted':   s:NERDTreeGitStatusGetIndicator('Deleted'),
                 \ 'NERDTreeGitStatusIgnored':   s:NERDTreeGitStatusGetIndicator('Ignored'),
                 \ 'NERDTreeGitStatusDirDirty':  s:NERDTreeGitStatusGetIndicator('Dirty'),
                 \ 'NERDTreeGitStatusDirClean':  s:NERDTreeGitStatusGetIndicator('Clean')
@@ -457,6 +470,7 @@ function! s:AddHighlighting()
     hi def link NERDTreeGitStatusUnmerged Label
     hi def link NERDTreeGitStatusUntracked Comment
     hi def link NERDTreeGitStatusDirDirty Tag
+    hi def link NERDTreeGitStatusDeleted Operator
     hi def link NERDTreeGitStatusIgnored SpecialKey
     hi def link NERDTreeGitStatusDirClean DiffAdd
 endfunction
