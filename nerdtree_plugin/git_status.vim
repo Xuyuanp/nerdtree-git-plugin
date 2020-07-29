@@ -47,6 +47,7 @@ let s:default_vals = {
             \ 'g:NERDTreeGitStatusUpdateOnCursorHold': 1,
             \ 'g:NERDTreeGitStatusShowIgnored':        0,
             \ 'g:NERDTreeGitStatusUseNerdFonts':       0,
+            \ 'g:NERDTreeGitStatusDirDirtyOnly':       1,
             \ 'g:NERDTreeGitStatusMapNextHunk':        ']c',
             \ 'g:NERDTreeGitStatusMapPrevHunk':        '[c',
             \ 'g:NERDTreeGitStatusUntrackedFilesMode': 'normal',
@@ -88,11 +89,11 @@ if g:NERDTreeGitStatusUseNerdFonts
                 \ 'Untracked' :'',
                 \ 'Renamed'   :'',
                 \ 'Unmerged'  :'',
+                \ 'Deleted'   :'',
                 \ 'Dirty'     :'',
                 \ 'Ignored'   :'',
                 \
                 \ 'Clean'     :'',
-                \ 'Deleted'   :'',
                 \ 'Unknown'   :''
                 \ }
 else
@@ -102,11 +103,11 @@ else
                 \ 'Untracked' :'✭',
                 \ 'Renamed'   :'➜',
                 \ 'Unmerged'  :'═',
+                \ 'Deleted'   :'✖',
                 \ 'Dirty'     :'✗',
                 \ 'Ignored'   :'☒',
                 \
                 \ 'Clean'     :'✔︎',
-                \ 'Deleted'   :'✖',
                 \ 'Unknown'   :'?'
                 \ }
 endif
@@ -228,7 +229,7 @@ function! g:NERDTreeGitStatusRefresh() abort
     for l:statusLine in l:statusLines
         " cache git status of files
         if l:is_rename
-            call s:NERDTreeCacheDirtyDir(l:workdir, l:workdir . '/' . l:statusLine)
+            call s:NERDTreeCacheDirtyDir(l:workdir, l:workdir . '/' . l:statusLine, 'Dirty')
             let l:is_rename = v:false
             continue
         endif
@@ -243,16 +244,31 @@ function! g:NERDTreeGitStatusRefresh() abort
                 let b:NERDTreeCachedGitDirtyDir[l:pathStr] = l:statusKey
             endif
         else
-            call s:NERDTreeCacheDirtyDir(l:workdir, l:pathStr)
+            call s:NERDTreeCacheDirtyDir(l:workdir, l:pathStr, l:statusKey)
         endif
     endfor
 endfunction
 
-function! s:NERDTreeCacheDirtyDir(root, pathStr)
+function! s:NERDTreeCacheDirtyDir(root, pathStr, statusKey) abort
     " cache dirty dir
     let l:dirtyPath = fnamemodify(a:pathStr, ':p:h')
-    while l:dirtyPath !=# a:root && has_key(b:NERDTreeCachedGitDirtyDir, l:dirtyPath) == 0
-        let b:NERDTreeCachedGitDirtyDir[l:dirtyPath] = 'Dirty'
+    while l:dirtyPath !=# a:root
+        let key = get(b:NERDTreeCachedGitDirtyDir, l:dirtyPath, '')
+        if g:NERDTreeGitStatusDirDirtyOnly
+            if key ==# ''
+                let b:NERDTreeCachedGitDirtyDir[l:dirtyPath] = 'Dirty'
+            else
+                return
+            endif
+        else
+            if key ==# ''
+                let b:NERDTreeCachedGitDirtyDir[l:dirtyPath] = a:statusKey
+            elseif key ==# 'Dirty' || key ==# a:statusKey
+                return
+            else
+                let b:NERDTreeCachedGitDirtyDir[l:dirtyPath] = 'Dirty'
+            endif
+        endif
         let l:dirtyPath = fnamemodify(l:dirtyPath, ':h')
     endwhile
 endfunction
