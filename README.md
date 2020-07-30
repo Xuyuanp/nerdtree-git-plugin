@@ -33,14 +33,17 @@ Use this variable to change symbols.
 
 ```vim
 let g:NERDTreeGitStatusIndicatorMapCustom = {
-    \ "Modified"  : "✹",
-    \ "Staged"    : "✚",
-    \ "Untracked" : "✭",
-    \ "Renamed"   : "➜",
-    \ "Unmerged"  : "═",
-    \ "Dirty"     : "✗",
-    \ "Ignored"   : "☒",
-    \ }
+                \ 'Modified'  :'✹',
+                \ 'Staged'    :'✚',
+                \ 'Untracked' :'✭',
+                \ 'Renamed'   :'➜',
+                \ 'Unmerged'  :'═',
+                \ 'Deleted'   :'✖',
+                \ 'Dirty'     :'✗',
+                \ 'Ignored'   :'☒',
+                \ 'Clean'     :'✔︎',
+                \ 'Unknown'   :'?',
+                \ }
 ```
 
 There is a predefined map used *nerdfonts*, to enable it
@@ -77,8 +80,22 @@ let g:NERDTreeGitStatusUntrackedFilesMode = 'all' " a heave feature too. default
 let g:NERDTreeGitStatusGitBinPath = '/your/file/path' " defualt: git (auto find in path)
 ```
 
+> How to show `Clean` indicator?
+
+```vim
+let g:NERDTreeGitStatusShowClean = 1 " default: 0
+```
+
+> How to hide the boring brackets(`[ ]`)?
+
+```vim
+let g:NERDTreeGitStatusConcealBrackets = 1 " default: 0
+```
+
+**NOTICE**: DO NOT enable this feature if you have also installed [vim-devicons](https://github.com/ryanoasis/vim-devicons).
+
 ## Credits
 
-*  [scrooloose](https://github.com/scrooloose): Open API for me.
-*  [git\_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
-*  [PickRelated](https://github.com/PickRelated): Add custom indicators & Review code.
+* [scrooloose](https://github.com/scrooloose): Open API for me.
+* [git\_nerd](https://github.com/swerner/git_nerd): Where my idea comes from.
+* [PickRelated](https://github.com/PickRelated): Add custom indicators & Review code.

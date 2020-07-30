@@ -2,7 +2,6 @@
 " File:        git_status.vim
 " Description: plugin for NERD Tree that provides git status support
 " Maintainer:  Xuyuan Pang <xuyuanp at gmail dot com>
-" Last Change: 4 Apr 2014
 " License:     This program is free software. It comes without any warranty,
 "              to the extent permitted by applicable law. You can redistribute
 "              it and/or modify it under the terms of the Do What The Fuck You
@@ -48,6 +47,9 @@ let s:default_vals = {
             \ 'g:NERDTreeGitStatusShowIgnored':        0,
             \ 'g:NERDTreeGitStatusUseNerdFonts':       0,
             \ 'g:NERDTreeGitStatusDirDirtyOnly':       1,
+            \ 'g:NERDTreeGitStatusConcealBrackets':    0,
+            \ 'g:NERDTreeGitStatusAlignIfConceal':     1,
+            \ 'g:NERDTreeGitStatusShowClean':          0,
             \ 'g:NERDTreeGitStatusMapNextHunk':        ']c',
             \ 'g:NERDTreeGitStatusMapPrevHunk':        '[c',
             \ 'g:NERDTreeGitStatusUntrackedFilesMode': 'normal',
@@ -81,9 +83,8 @@ if !executable(g:NERDTreeGitStatusGitBinPath)
     finish
 endif
 
-
 if g:NERDTreeGitStatusUseNerdFonts
-    let s:NERDTreeIndicatorMap = {
+    let s:NERDTreeGitStatusIndicatorMap = {
                 \ 'Modified'  :'',
                 \ 'Staged'    :'',
                 \ 'Untracked' :'',
@@ -92,12 +93,11 @@ if g:NERDTreeGitStatusUseNerdFonts
                 \ 'Deleted'   :'',
                 \ 'Dirty'     :'',
                 \ 'Ignored'   :'',
-                \
                 \ 'Clean'     :'',
                 \ 'Unknown'   :''
                 \ }
 else
-    let s:NERDTreeIndicatorMap = {
+    let s:NERDTreeGitStatusIndicatorMap = {
                 \ 'Modified'  :'✹',
                 \ 'Staged'    :'✚',
                 \ 'Untracked' :'✭',
@@ -106,7 +106,6 @@ else
                 \ 'Deleted'   :'✖',
                 \ 'Dirty'     :'✗',
                 \ 'Ignored'   :'☒',
-                \
                 \ 'Clean'     :'✔︎',
                 \ 'Unknown'   :'?'
                 \ }
@@ -133,45 +132,67 @@ endfunction
 
 function! s:process_line_v1(sline) abort
     let l:pathStr = a:sline[3:]
-    let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[0], a:sline[1])
+    let l:statusKey = s:NERDTreeGitStatusGetStatusKey(a:sline[0], a:sline[1])
     return [l:pathStr, l:statusKey]
 endfunction
 
+let s:left_space = ''
+let s:right_space = ''
+
+if has('conceal') && g:NERDTreeGitStatusConcealBrackets
+    " Hide the backets
+    augroup webdevicons_conceal_nerdtree_brackets
+        au!
+        autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\]" contained conceal containedin=NERDTreeFlags
+        autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\[" contained conceal containedin=NERDTreeFlags
+        autocmd FileType nerdtree setlocal conceallevel=3
+        autocmd FileType nerdtree setlocal concealcursor=nvic
+    augroup END
+
+    let s:left_space  = ' '
+    let s:right_space = ' '
+endif
+
 function! s:process_line_v2(sline) abort
-        if a:sline[0] ==# '1'
-            let l:statusKey = s:NERDTreeGetFileGitStatusKey(a:sline[2], a:sline[3])
-            let l:pathStr = a:sline[113:]
-        elseif a:sline[0] ==# '2'
-            let l:statusKey = 'Renamed'
-            let l:pathStr = a:sline[113:]
-            let l:pathStr = l:pathStr[stridx(l:pathStr, ' ')+1:]
-        elseif a:sline[0] ==# 'u'
-            let l:statusKey = 'Unmerged'
-            let l:pathStr = a:sline[161:]
-        elseif a:sline[0] ==# '?'
-            let l:statusKey = 'Untracked'
-            let l:pathStr = a:sline[2:]
-        elseif a:sline[0] ==# '!'
-            let l:statusKey = 'Ignored'
-            let l:pathStr = a:sline[2:]
-        else
-            throw '[nerdtree_git_status] unknown status: ' . a:sline
-        endif
-        return [l:pathStr, l:statusKey]
+    if a:sline[0] ==# '1'
+        let l:statusKey = s:NERDTreeGitStatusGetStatusKey(a:sline[2], a:sline[3])
+        let l:pathStr = a:sline[113:]
+    elseif a:sline[0] ==# '2'
+        let l:statusKey = 'Renamed'
+        let l:pathStr = a:sline[113:]
+        let l:pathStr = l:pathStr[stridx(l:pathStr, ' ')+1:]
+    elseif a:sline[0] ==# 'u'
+        let l:statusKey = 'Unmerged'
+        let l:pathStr = a:sline[161:]
+    elseif a:sline[0] ==# '?'
+        let l:statusKey = 'Untracked'
+        let l:pathStr = a:sline[2:]
+    elseif a:sline[0] ==# '!'
+        let l:statusKey = 'Ignored'
+        let l:pathStr = a:sline[2:]
+    else
+        throw '[nerdtree_git_status] unknown status: ' . a:sline
+    endif
+    return [l:pathStr, l:statusKey]
 endfunction
 
 let s:porcelain_version = s:choose_porcelain_version(s:get_git_version())
 let s:process_line = function('s:process_line_' . s:porcelain_version)
+
+func s:format_indicator(indicator) abort
+    return printf('%s%s%s', s:left_space, a:indicator, s:right_space)
+endfunction
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
         call g:NERDTreeGitStatusRefresh()
     endif
     let l:path = a:event.subject
-    let l:flag = g:NERDTreeGitStatusGetPrefix(l:path)
+    let l:indicator = g:NERDTreeGitStatusGetIndicator(l:path)
     call l:path.flagSet.clearFlags('git')
-    if l:flag !=# ''
-        call l:path.flagSet.addFlag('git', l:flag)
+    if l:indicator !=# ''
+        let l:indicator = s:format_indicator(l:indicator)
+        call l:path.flagSet.addFlag('git', l:indicator)
     endif
 endfunction
 
@@ -218,7 +239,6 @@ function! g:NERDTreeGitStatusRefresh() abort
     let l:git_cmd = join(l:git_args, ' ')
     " When the -z option is given, pathnames are printed as is and without any quoting and lines are terminated with a NUL (ASCII 0x00, <C-A> in vim) byte. See `man git-status`
     let l:statusLines = split(system(l:git_cmd), "\<C-A>")
-
     if l:statusLines != [] && l:statusLines[0] =~# 'fatal:.*'
         return
     endif
@@ -228,7 +248,7 @@ function! g:NERDTreeGitStatusRefresh() abort
     for l:statusLine in l:statusLines
         " cache git status of files
         if l:is_rename
-            call s:NERDTreeCacheDirtyDir(l:workdir, l:workdir . '/' . l:statusLine, 'Dirty')
+            call s:NERDTreeGitStatusCacheDirtyDir(l:workdir, l:workdir . '/' . l:statusLine, 'Dirty')
             let l:is_rename = v:false
             continue
         endif
@@ -243,12 +263,12 @@ function! g:NERDTreeGitStatusRefresh() abort
                 let b:NERDTreeCachedGitDirtyDir[l:pathStr] = l:statusKey
             endif
         else
-            call s:NERDTreeCacheDirtyDir(l:workdir, l:pathStr, l:statusKey)
+            call s:NERDTreeGitStatusCacheDirtyDir(l:workdir, l:pathStr, l:statusKey)
         endif
     endfor
 endfunction
 
-function! s:NERDTreeCacheDirtyDir(root, pathStr, statusKey) abort
+function! s:NERDTreeGitStatusCacheDirtyDir(root, pathStr, statusKey) abort
     " cache dirty dir
     let l:dirtyPath = fnamemodify(a:pathStr, ':p:h')
     while l:dirtyPath !=# a:root
@@ -272,12 +292,12 @@ function! s:NERDTreeCacheDirtyDir(root, pathStr, statusKey) abort
     endwhile
 endfunction
 
-" FUNCTION: g:NERDTreeGitStatusGetPrefix(path) {{{2
+" FUNCTION: g:NERDTreeGitStatusGetIndicator(path) {{{2
 " return the indicator of the path
 " Args: path
 let s:GitStatusCacheTimeExpiry = 2
 let s:GitStatusCacheTime = 0
-function! g:NERDTreeGitStatusGetPrefix(path)
+function! g:NERDTreeGitStatusGetIndicator(path)
     if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
         call g:NERDTreeGitStatusRefresh()
         let s:GitStatusCacheTime = localtime()
@@ -291,24 +311,33 @@ function! g:NERDTreeGitStatusGetPrefix(path)
     else
         let l:statusKey = get(b:NERDTreeCachedGitFileStatus, l:pathStr, '')
     endif
-    if l:statusKey ==# ''
-        return ''
+
+    if l:statusKey !=# ''
+        return s:NERDTreeGitStatusGetIndicator(l:statusKey)
     endif
-    return s:NERDTreeGitStatusGetIndicator(l:statusKey)
+
+    if g:NERDTreeGitStatusShowClean
+        return s:NERDTreeGitStatusGetIndicator('Clean')
+    endif
+
+    if g:NERDTreeGitStatusConcealBrackets && g:NERDTreeGitStatusAlignIfConceal
+        return ' '
+    endif
+    return ''
 endfunction
 
 function! s:NERDTreeGitStatusGetIndicator(statusKey)
-    if exists('g:NERDTreeIndicatorMapCustom')
-        let l:indicator = get(g:NERDTreeIndicatorMapCustom, a:statusKey, '')
+    if exists('g:NERDTreeGitStatusIndicatorMapCustom')
+        let l:indicator = get(g:NERDTreeGitStatusIndicatorMapCustom, a:statusKey, '')
         if l:indicator !=# ''
             return l:indicator
         endif
     endif
-    let l:indicator = get(s:NERDTreeIndicatorMap, a:statusKey, '')
+    let l:indicator = get(s:NERDTreeGitStatusIndicatorMap, a:statusKey, '')
     if l:indicator !=# ''
         return l:indicator
     endif
-    return ''
+    throw '[nerdtree-git-plugin] ' . 'unknown status key: ' . a:statusKey
 endfunction
 
 let s:unmerged_status = {
@@ -321,7 +350,7 @@ let s:unmerged_status = {
             \ 'UU': 1,
             \ }
 
-" Function: s:NERDTreeGetFileGitStatusKey() function {{{2
+" Function: s:NERDTreeGitStatusGetStatusKey() function {{{2
 " This function is used to get git status key
 "
 " Args:
@@ -330,25 +359,48 @@ let s:unmerged_status = {
 "
 "Returns:
 " status key
-function! s:NERDTreeGetFileGitStatusKey(us, them)
-    let l:xy = a:us . a:them
+" X          Y     Meaning
+" -------------------------------------------------
+"           [MD]   not updated
+" M        [ MD]   updated in index
+" A        [ MD]   added to index
+" D         [ M]   deleted from index
+" R        [ MD]   renamed in index
+" C        [ MD]   copied in index
+" [MARC]           index and work tree matches
+" [ MARC]     M    work tree changed since index
+" [ MARC]     D    deleted in work tree
+" -------------------------------------------------
+" D           D    unmerged, both deleted
+" A           U    unmerged, added by us
+" U           D    unmerged, deleted by them
+" U           A    unmerged, added by them
+" D           U    unmerged, deleted by us
+" A           A    unmerged, both added
+" U           U    unmerged, both modified
+" -------------------------------------------------
+" ?           ?    untracked
+" !           !    ignored
+" -------------------------------------------------
+function! s:NERDTreeGitStatusGetStatusKey(x, y)
+    let l:xy = a:x . a:y
     if get(s:unmerged_status, l:xy, 0)
         return 'Unmerged'
     elseif l:xy ==# '??'
         return 'Untracked'
     elseif l:xy ==# '!!'
         return 'Ignored'
-    elseif a:them ==# 'M'
+    elseif a:y ==# 'M'
         return 'Modified'
-    elseif a:them ==# 'D'
+    elseif a:y ==# 'D'
         return 'Deleted'
-    elseif a:them =~# '[RC]'
+    elseif a:y =~# '[RC]'
         return 'Renamed'
-    elseif a:us ==# 'D'
+    elseif a:x ==# 'D'
         return 'Deleted'
-    elseif a:us =~# '[MA]'
+    elseif a:x =~# '[MA]'
         return 'Staged'
-    elseif a:us =~# '[RC]'
+    elseif a:x =~# '[RC]'
         return 'Renamed'
     else
         return 'Unknown'
@@ -357,18 +409,44 @@ endfunction
 
 " FUNCTION: s:jumpToNextHunk(node) {{{2
 function! s:jumpToNextHunk(node)
-    let l:position = search('\[[^{RO} ].*\]', '')
-    if l:position
-        call nerdtree#echo('[git-status] Jump to next hunk')
-    endif
+    let ui = b:NERDTree.ui
+    let rootLn = ui.getRootLineNum()
+    let totalLn = line('$')
+    let currLn = line('.')
+    let ln = currLn + 1
+    while ln != currLn
+        if ln > totalLn
+            let ln = rootLn
+        endif
+        let path = ui.getPath(ln).str()
+        if has_key(b:NERDTreeCachedGitFileStatus, path) || has_key(b:NERDTreeCachedGitDirtyDir, path)
+            exec '' . ln
+            call nerdtree#echo('[git-status] Jump to next hunk')
+            return
+        endif
+        let ln = ln + 1
+    endwhile
 endfunction
 
 " FUNCTION: s:jumpToPrevHunk(node) {{{2
 function! s:jumpToPrevHunk(node)
-    let l:position = search('\[[^{RO} ].*\]', 'b')
-    if l:position
-        call nerdtree#echo('[git-status] Jump to prev hunk')
-    endif
+    let ui = b:NERDTree.ui
+    let rootLn = ui.getRootLineNum()
+    let totalLn = line('$')
+    let currLn = line('.')
+    let ln = currLn - 1
+    while ln != currLn
+        if ln <= rootLn
+            let ln = totalLn
+        endif
+        let path = ui.getPath(ln).str()
+        if has_key(b:NERDTreeCachedGitFileStatus, path) || has_key(b:NERDTreeCachedGitDirtyDir, path)
+            exec '' . ln
+            call nerdtree#echo('[git-status] Jump to prev hunk')
+            return
+        endif
+        let ln = ln - 1
+    endwhile
 endfunction
 
 " Function: s:SID()   {{{2
@@ -384,16 +462,16 @@ function! s:NERDTreeGitStatusKeyMapping()
     let l:s = '<SNR>' . s:SID() . '_'
 
     call NERDTreeAddKeyMap({
-        \ 'key': g:NERDTreeGitStatusMapNextHunk,
-        \ 'scope': 'Node',
-        \ 'callback': l:s.'jumpToNextHunk',
-        \ 'quickhelpText': 'Jump to next git hunk' })
+                \ 'key': g:NERDTreeGitStatusMapNextHunk,
+                \ 'scope': 'Node',
+                \ 'callback': l:s.'jumpToNextHunk',
+                \ 'quickhelpText': 'Jump to next git hunk' })
 
     call NERDTreeAddKeyMap({
-        \ 'key': g:NERDTreeGitStatusMapPrevHunk,
-        \ 'scope': 'Node',
-        \ 'callback': l:s.'jumpToPrevHunk',
-        \ 'quickhelpText': 'Jump to prev git hunk' })
+                \ 'key': g:NERDTreeGitStatusMapPrevHunk,
+                \ 'scope': 'Node',
+                \ 'callback': l:s.'jumpToPrevHunk',
+                \ 'quickhelpText': 'Jump to prev git hunk' })
 
 endfunction
 
@@ -444,9 +522,6 @@ function! s:FileUpdate(fname)
     exec l:winnr . 'wincmd w'
 endfunction
 
-augroup AddHighlighting
-    autocmd FileType nerdtree call s:AddHighlighting()
-augroup END
 function! s:AddHighlighting()
     let l:synmap = {
                 \ 'NERDTreeGitStatusModified':  s:NERDTreeGitStatusGetIndicator('Modified'),
@@ -463,6 +538,7 @@ function! s:AddHighlighting()
         exec 'syn match ' . l:name . ' #' . escape(l:value, '#~*.\') . '# containedin=NERDTreeFlags'
     endfor
 
+    hi def link NERDTreeGitStatusUnmerged Function
     hi def link NERDTreeGitStatusModified Special
     hi def link NERDTreeGitStatusStaged Function
     hi def link NERDTreeGitStatusRenamed Title
@@ -471,7 +547,7 @@ function! s:AddHighlighting()
     hi def link NERDTreeGitStatusDirDirty Tag
     hi def link NERDTreeGitStatusDeleted Operator
     hi def link NERDTreeGitStatusIgnored SpecialKey
-    hi def link NERDTreeGitStatusDirClean DiffAdd
+    hi def link NERDTreeGitStatusDirClean Method
 endfunction
 
 function! s:SetupListeners()
@@ -489,6 +565,7 @@ augroup nerdtreegitplugin
     if g:NERDTreeGitStatusUpdateOnCursorHold
         autocmd CursorHold * silent! call s:CursorHoldUpdate()
     endif
+    autocmd FileType nerdtree call s:AddHighlighting()
 augroup END
 
 call s:NERDTreeGitStatusKeyMapping()
