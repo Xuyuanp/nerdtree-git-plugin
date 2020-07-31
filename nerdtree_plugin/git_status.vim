@@ -179,9 +179,33 @@ endfunction
 let s:porcelain_version = s:choose_porcelain_version(s:get_git_version())
 let s:process_line = function('s:process_line_' . s:porcelain_version)
 
-func s:format_indicator(indicator) abort
+function! s:format_indicator(indicator) abort
     return printf('%s%s%s', s:left_space, a:indicator, s:right_space)
 endfunction
+
+function! s:path2str_unix(path) abort
+    return a:path.str()
+endfunction
+
+function! s:path2str_win(path) abort
+    if exists('+shellslash')
+        if &shellslash
+            return a:path.str()
+        else
+            set shellslash
+            let l:pathStr = a:path.str()
+            set noshellslash
+            return l:pathStr
+        endif
+    else
+        let l:pathStr = a:path.str()
+        let l:pathStr = a:path.WinToUnixPath(l:pathStr)
+        let l:pathStr = a:path.drive . l:pathStr
+        return l:pathStr
+    endif
+endfunction
+
+let s:path2str = function('s:path2str_' . ((has('win32') || has('win64')) ? 'win' : 'unix'))
 
 function! NERDTreeGitStatusRefreshListener(event)
     if !exists('b:NOT_A_GIT_REPOSITORY')
@@ -302,7 +326,7 @@ function! g:NERDTreeGitStatusGetIndicator(path)
         call g:NERDTreeGitStatusRefresh()
         let s:GitStatusCacheTime = localtime()
     endif
-    let l:pathStr = a:path.str()
+    let l:pathStr = s:path2str(a:path)
     if a:path.isDirectory
         let l:statusKey = get(b:NERDTreeCachedGitFileStatus, l:pathStr . '/', '')
         if l:statusKey ==# ''
