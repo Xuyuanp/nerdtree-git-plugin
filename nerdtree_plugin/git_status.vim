@@ -669,7 +669,9 @@ function! s:enableLiveUpdate() abort
 endfunction
 
 function! s:disableLiveUpdate() abort
-    autocmd! nerdtreegitplugin_liveupdate
+    augroup nerdtreegitplugin_liveupdate
+        autocmd!
+    augroup end
 endfunction
 
 augroup nerdtreegitplugin
