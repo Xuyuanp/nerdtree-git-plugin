@@ -15,7 +15,7 @@ if exists('g:loaded_nerdtree_git_status')
 endif
 let g:loaded_nerdtree_git_status = 1
 
-let s:is_win = has('win16') || has('win32') || has('win64')
+let s:is_win = gitstatus#isWin()
 
 " stolen from nerdtree
 "Function: s:initVariable() function {{{2
@@ -98,52 +98,9 @@ endif
 
 let g:NERDTreeGitStatusCache = {}
 
-if g:NERDTreeGitStatusUseNerdFonts
-    let s:NERDTreeGitStatusIndicatorMap = {
-                \ 'Modified'  :'',
-                \ 'Staged'    :'',
-                \ 'Untracked' :'',
-                \ 'Renamed'   :'',
-                \ 'Unmerged'  :'',
-                \ 'Deleted'   :'',
-                \ 'Dirty'     :'',
-                \ 'Ignored'   :'',
-                \ 'Clean'     :'',
-                \ 'Unknown'   :''
-                \ }
-else
-    let s:NERDTreeGitStatusIndicatorMap = {
-                \ 'Modified'  :'✹',
-                \ 'Staged'    :'✚',
-                \ 'Untracked' :'✭',
-                \ 'Renamed'   :'➜',
-                \ 'Unmerged'  :'═',
-                \ 'Deleted'   :'✖',
-                \ 'Dirty'     :'✗',
-                \ 'Ignored'   :'☒',
-                \ 'Clean'     :'✔︎',
-                \ 'Unknown'   :'?'
-                \ }
-endif
-
-if has('conceal') && g:NERDTreeGitStatusConcealBrackets
-    " Hide the backets
-    augroup webdevicons_conceal_nerdtree_brackets
-        au!
-        autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\]" contained conceal containedin=NERDTreeFlags
-        autocmd FileType nerdtree syntax match hideBracketsInNerdTree "\[" contained conceal containedin=NERDTreeFlags
-        autocmd FileType nerdtree setlocal conceallevel=3
-        autocmd FileType nerdtree setlocal concealcursor=nvic
-    augroup END
-
-    function! s:formatIndicator(indicator) abort
-        return printf(' %s ', a:indicator)
-    endfunction
-else
-    function! s:formatIndicator(indicator) abort
-        return a:indicator
-    endfunction
-endif
+function! s:formatIndicator(indicator) abort
+    return gitstatus#shouldConceal() ? printf(' %s ', a:indicator) : a:indicator
+endfunction
 
 if g:NERDTreeGitStatusPorcelainVersion ==# 2
     function! s:processLine(sline) abort
@@ -328,7 +285,7 @@ endfunction
 " FUNCTION: s:getIndicatorByPath(path) {{{2
 " return the indicator of the path
 " Args: path
-function! s:getIndicatorByPath(path)
+function! s:getIndicatorByPath(path) abort
     let l:pathStr = s:path2str(a:path)
     let l:statusKey = get(g:NERDTreeGitStatusCache, l:pathStr, '')
 
@@ -346,18 +303,8 @@ function! s:getIndicatorByPath(path)
     return ''
 endfunction
 
-function! s:getIndicator(statusKey)
-    if exists('g:NERDTreeGitStatusIndicatorMapCustom')
-        let l:indicator = get(g:NERDTreeGitStatusIndicatorMapCustom, a:statusKey, '')
-        if l:indicator !=# ''
-            return l:indicator
-        endif
-    endif
-    let l:indicator = get(s:NERDTreeGitStatusIndicatorMap, a:statusKey, '')
-    if l:indicator !=# ''
-        return l:indicator
-    endif
-    throw '[nerdtree-git-plugin] ' . 'unknown status key: ' . a:statusKey
+function! s:getIndicator(statusKey) abort
+    return gitstatus#getIndicator(a:statusKey)
 endfunction
 
 let s:unmerged_status = {
@@ -533,34 +480,6 @@ function! s:onFileUpdate(fname)
     call s:logger.debug('run file-update job: ' . job.id)
 endfunction
 
-function! s:addNERDTreeIndicatorHighlighting() abort
-    let l:synmap = {
-                \ 'NERDTreeGitStatusModified':  s:getIndicator('Modified'),
-                \ 'NERDTreeGitStatusStaged':    s:getIndicator('Staged'),
-                \ 'NERDTreeGitStatusUntracked': s:getIndicator('Untracked'),
-                \ 'NERDTreeGitStatusRenamed':   s:getIndicator('Renamed'),
-                \ 'NERDTreeGitStatusDeleted':   s:getIndicator('Deleted'),
-                \ 'NERDTreeGitStatusIgnored':   s:getIndicator('Ignored'),
-                \ 'NERDTreeGitStatusDirDirty':  s:getIndicator('Dirty'),
-                \ 'NERDTreeGitStatusDirClean':  s:getIndicator('Clean')
-                \ }
-
-    for [l:name, l:value] in items(l:synmap)
-        execute 'syntax match ' . l:name . ' #' . escape(l:value, '#~*.\') . '# containedin=NERDTreeFlags'
-    endfor
-
-    highlight default link NERDTreeGitStatusUnmerged  Function
-    highlight default link NERDTreeGitStatusModified  Special
-    highlight default link NERDTreeGitStatusStaged    Function
-    highlight default link NERDTreeGitStatusRenamed   Title
-    highlight default link NERDTreeGitStatusUnmerged  Label
-    highlight default link NERDTreeGitStatusUntracked Comment
-    highlight default link NERDTreeGitStatusDirDirty  Tag
-    highlight default link NERDTreeGitStatusDeleted   Operator
-    highlight default link NERDTreeGitStatusIgnored   SpecialKey
-    highlight default link NERDTreeGitStatusDirClean  Method
-endfunction
-
 function! NERDTreeGitStatusRefreshListener(event) abort
     let l:path = a:event.subject
     let l:indicator = s:getIndicatorByPath(l:path)
@@ -645,14 +564,12 @@ function! s:setupNERDTreeKeyMappings()
                 \ 'quickhelpText': 'Jump to prev git hunk' })
 endfunction
 
-function! s:onNERDTreeDirChanged() abort
-    call g:NERDTree.MustBeOpen()
-    call s:getGitWorkdir(s:path2str(b:NERDTree.root.path))
+function! s:onNERDTreeDirChanged(path) abort
+    call s:getGitWorkdir(a:path)
 endfunction
 
-function! s:onNERDTreeInit() abort
-    call g:NERDTree.MustBeOpen()
-    call s:getGitWorkdir(s:path2str(b:NERDTree.root.path))
+function! s:onNERDTreeInit(path) abort
+    call s:getGitWorkdir(a:path)
 endfunction
 
 function! s:enableLiveUpdate() abort
@@ -676,12 +593,8 @@ endfunction
 
 augroup nerdtreegitplugin
     autocmd!
-
-    autocmd User NERDTreeInit call s:onNERDTreeInit()
-
-    autocmd User NERDTreeNewRoot call s:onNERDTreeDirChanged()
-
-    autocmd FileType nerdtree call s:addNERDTreeIndicatorHighlighting()
+    autocmd User NERDTreeInit call s:onNERDTreeInit(s:path2str(b:NERDTree.root.path))
+    autocmd User NERDTreeNewRoot call s:onNERDTreeDirChanged(s:path2str(b:NERDTree.root.path))
 augroup end
 
 call s:setupNERDTreeKeyMappings()
