@@ -1,10 +1,19 @@
+" ============================================================================
+" File:        autoload/gitstatus/job.vim
+" Description: async-jobs
+" Maintainer:  Xuyuan Pang <xuyuanp at gmail dot com>
+" License:     This program is free software. It comes without any warranty,
+"              to the extent permitted by applicable law. You can redistribute
+"              it and/or modify it under the terms of the Do What The Fuck You
+"              Want To Public License, Version 2, as published by Sam Hocevar.
+"              See http://sam.zoy.org/wtfpl/COPYING for more details.
+" ============================================================================
 if exists('g:loaded_nerdtree_git_status_job')
     finish
 endif
 let g:loaded_nerdtree_git_status_job = 1
 
 " stolen from vim-plug
-let s:is_win = has('win16') || has('win32') || has('win64')
 let s:nvim = has('nvim-0.2') || (has('nvim') && exists('*jobwait'))
 let s:vim8 = has('patch-8.0.0039') && exists('*job_start')
 
