@@ -8,8 +8,6 @@
 "              Want To Public License, Version 2, as published by Sam Hocevar.
 "              See http://sam.zoy.org/wtfpl/COPYING for more details.
 " ============================================================================
-scriptencoding utf-8
-
 if exists('g:loaded_nerdtree_git_status_autoload')
     finish
 endif
@@ -21,29 +19,42 @@ endfunction
 
 if get(g:, 'NERDTreeGitStatusUseNerdFonts', 0)
     let s:indicatorMap = {
-                \ 'Modified'  :'',
-                \ 'Staged'    :'',
-                \ 'Untracked' :'',
-                \ 'Renamed'   :'',
-                \ 'Unmerged'  :'',
-                \ 'Deleted'   :'',
-                \ 'Dirty'     :'',
-                \ 'Ignored'   :'',
-                \ 'Clean'     :'',
-                \ 'Unknown'   :''
+                \ 'Modified'  :nr2char(61545),
+                \ 'Staged'    :nr2char(61543),
+                \ 'Untracked' :nr2char(61736),
+                \ 'Renamed'   :nr2char(62804),
+                \ 'Unmerged'  :nr2char(61556),
+                \ 'Deleted'   :nr2char(63167),
+                \ 'Dirty'     :nr2char(61453),
+                \ 'Ignored'   :nr2char(61738),
+                \ 'Clean'     :nr2char(61452),
+                \ 'Unknown'   :nr2char(61832)
+                \ }
+elseif &encoding ==? 'utf-8'
+    let s:indicatorMap = {
+                \ 'Modified'  :nr2char(10041),
+                \ 'Staged'    :nr2char(10010),
+                \ 'Untracked' :nr2char(10029),
+                \ 'Renamed'   :nr2char(10140),
+                \ 'Unmerged'  :nr2char(9552),
+                \ 'Deleted'   :nr2char(10006),
+                \ 'Dirty'     :nr2char(10007),
+                \ 'Ignored'   :nr2char(33),
+                \ 'Clean'     :nr2char(10004),
+                \ 'Unknown'   :nr2char(120744)
                 \ }
 else
     let s:indicatorMap = {
-                \ 'Modified'  :'✹',
-                \ 'Staged'    :'✚',
-                \ 'Untracked' :'✭',
-                \ 'Renamed'   :'➜',
-                \ 'Unmerged'  :'═',
-                \ 'Deleted'   :'✖',
-                \ 'Dirty'     :'✗',
-                \ 'Ignored'   :'☒',
-                \ 'Clean'     :'✔︎',
-                \ 'Unknown'   :'?'
+                \ 'Modified'  :'*',
+                \ 'Staged'    :'+',
+                \ 'Untracked' :'!',
+                \ 'Renamed'   :'R',
+                \ 'Unmerged'  :'=',
+                \ 'Deleted'   :'D',
+                \ 'Dirty'     :'X',
+                \ 'Ignored'   :'?',
+                \ 'Clean'     :'C',
+                \ 'Unknown'   :'E'
                 \ }
 endif
 
