@@ -36,19 +36,6 @@ function! s:initVariable(var, value) abort
     return 0
 endfunction
 
-function! s:deprecated(oldv, newv) abort
-    call s:logger.warning(printf("option '%s' is deprecated, please use '%s'", a:oldv, a:newv))
-endfunction
-
-function! s:migrateVariable(oldv, newv) abort
-    if exists(a:oldv)
-        call s:deprecated(a:oldv, a:newv)
-        exec 'let ' . a:newv . ' = ' . a:oldv
-        return 1
-    endif
-    return 0
-endfunction
-
 let s:default_vals = {
             \ 'g:NERDTreeGitStatusEnable':             1,
             \ 'g:NERDTreeGitStatusUpdateOnWrite':      1,
@@ -59,7 +46,7 @@ let s:default_vals = {
             \ 'g:NERDTreeGitStatusConcealBrackets':    0,
             \ 'g:NERDTreeGitStatusAlignIfConceal':     1,
             \ 'g:NERDTreeGitStatusShowClean':          0,
-            \ 'g:NERDTreeGitStatusLogLevel':           3,
+            \ 'g:NERDTreeGitStatusLogLevel':           2,
             \ 'g:NERDTreeGitStatusPorcelainVersion':   2,
             \ 'g:NERDTreeGitStatusMapNextHunk':        ']c',
             \ 'g:NERDTreeGitStatusMapPrevHunk':        '[c',
@@ -72,6 +59,19 @@ for [var, value] in items(s:default_vals)
 endfor
 
 let s:logger = gitstatus#log#NewLogger(g:NERDTreeGitStatusLogLevel)
+
+function! s:deprecated(oldv, newv) abort
+    call s:logger.warning(printf("option '%s' is deprecated, please use '%s'", a:oldv, a:newv))
+endfunction
+
+function! s:migrateVariable(oldv, newv) abort
+    if exists(a:oldv)
+        call s:deprecated(a:oldv, a:newv)
+        exec 'let ' . a:newv . ' = ' . a:oldv
+        return 1
+    endif
+    return 0
+endfunction
 
 let s:need_migrate_vals = {
             \ 'g:NERDTreeShowGitStatus':      'g:NERDTreeGitStatusEnable',
