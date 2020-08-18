@@ -24,12 +24,15 @@ let s:Job = {
         \ 'err_chunks': [''],
         \ }
 
+" disabled ProhibitImplicitScopeVariable because we will use lots of `self`
+" disabled ProhibitUnusedVariable because lambda
+" vint: -ProhibitImplicitScopeVariable -ProhibitUnusedVariable
 function! s:newJob(name, opts) abort
-    let job = extend(deepcopy(s:Job), {
+    let l:job = extend(deepcopy(s:Job), {
         \ 'name': a:name,
         \ 'opts': a:opts
         \ })
-    return job
+    return l:job
 endfunction
 
 function! s:Job.onStdoutCB(data) abort
@@ -116,13 +119,14 @@ else
         call self.onExitCB()
     endfunction
 endif
+" vint: +ProhibitImplicitScopeVariable +ProhibitUnusedVariable
 
 function! s:isEOF(data) abort
     return len(a:data) == 1 && a:data[0] is# ''
 endfunction
 
 function! gitstatus#job#Spawn(name, cmd, opts) abort
-    let job = s:newJob(a:name, a:opts)
-    call job.run(a:cmd)
-    return job
+    let l:job = s:newJob(a:name, a:opts)
+    call l:job.run(a:cmd)
+    return l:job
 endfunction
