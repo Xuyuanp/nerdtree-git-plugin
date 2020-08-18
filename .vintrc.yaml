@@ -11,30 +11,30 @@ cmdargs:
 
 policies:
   ProhibitAutocmdWithNoGroup:
-    enable: true
+    enabled: true
   ProhibitCommandRelyOnUser:
-    enable: true
+    enabled: true
   ProhibitCommandWithUnintendedSideEffect:
-    enable: true
+    enabled: true
   ProhibitEncodingOptionAfterScriptEncoding:
-    enable: true
+    enabled: true
   ProhibitEqualTildeOperator:
-    enable: true
+    enabled: true
   ProhibitImplicitScopeBuiltinVariable:
-    enable: true
+    enabled: true
   ProhibitMissingScriptEncoding:
-    enable: true
+    enabled: true
   ProhibitNoAbortFunction:
-    enable: true
+    enabled: true
   ProhibitSetNoCompatible:
-    enable: true
+    enabled: true
   ProhibitUnnecessaryDoubleQuote:
-    enable: true
+    enabled: true
   ProhibitUnusedVariable:
-    enable: true
+    enabled: true
   ProhibitUsingUndeclaredVariable:
-    enable: true
+    enabled: true
   ProhibitAbbreviationOption:
-    enable: true
+    enabled: true
   ProhibitImplicitScopeVariable:
-    enable: true
+    enabled: true
