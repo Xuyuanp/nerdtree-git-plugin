@@ -20,6 +20,7 @@ let s:error   = 3 | :lockvar s:error
 
 let s:Logger = {}
 
+" vint: -ProhibitImplicitScopeVariable
 function! s:Logger.output(level, msg) abort
     if a:level < self.level
         return
@@ -48,8 +49,8 @@ function! s:Logger.error(msg) abort
                 \ call self.output(s:error, a:msg) |
                 \ echohl None
 endfunction
+" vint: +ProhibitImplicitScopeVariable
 
 function! gitstatus#log#NewLogger(level) abort
-    let obj = extend(copy(s:Logger), {'level': a:level})
-    return obj
+    return extend(copy(s:Logger), {'level': a:level})
 endfunction

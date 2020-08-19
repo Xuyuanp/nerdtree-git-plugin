@@ -54,8 +54,8 @@ let s:default_vals = {
             \ 'g:NERDTreeGitStatusGitBinPath':         'git',
             \ }
 
-for [var, value] in items(s:default_vals)
-    call s:initVariable(var, value)
+for [s:var, s:value] in items(s:default_vals)
+    call s:initVariable(s:var, s:value)
 endfor
 
 let s:logger = gitstatus#log#NewLogger(g:NERDTreeGitStatusLogLevel)
@@ -83,8 +83,8 @@ let s:need_migrate_vals = {
             \ 'g:NERDTreeIndicatorMapCustom': 'g:NERDTreeGitStatusIndicatorMapCustom',
             \ }
 
-for [oldv, newv] in items(s:need_migrate_vals)
-    call s:migrateVariable(oldv, newv)
+for [s:oldv, s:newv] in items(s:need_migrate_vals)
+    call s:migrateVariable(s:oldv, s:newv)
 endfor
 
 if !g:NERDTreeGitStatusEnable
@@ -145,12 +145,12 @@ endif
 if s:is_win
     if exists('+shellslash')
         function! s:path2str(path) abort
-            let sslbak = &shellslash
+            let l:sslbak = &shellslash
             try
                 set shellslash
                 return a:path.str()
             finally
-                let &shellslash = sslbak
+                let &shellslash = l:sslbak
             endtry
         endfunction
     else
@@ -167,6 +167,8 @@ else
     endfunction
 endif
 
+" disable ProhibitUnusedVariable because these three functions used to callback
+" vint: -ProhibitUnusedVariable
 function! s:onGitWorkdirSuccessCB(job) abort
     let g:NTGitWorkdir = split(join(a:job.chunks, ''), "\n")[0]
     call s:logger.debug(printf("'%s' is in this git repo: '%s'", a:job.opts.cwd, g:NTGitWorkdir))
@@ -176,8 +178,8 @@ function! s:onGitWorkdirSuccessCB(job) abort
 endfunction
 
 function! s:onGitWorkdirFailedCB(job) abort
-    let errormsg = join(a:job.err_chunks, '')
-    if errormsg =~# 'fatal: Not a git repository'
+    let l:errormsg = join(a:job.err_chunks, '')
+    if l:errormsg =~# 'fatal: Not a git repository'
         call s:logger.debug(printf("'%s' is not in a git repo", a:job.opts.cwd))
     endif
     call s:disableLiveUpdate()
@@ -185,7 +187,7 @@ function! s:onGitWorkdirFailedCB(job) abort
 endfunction
 
 function! s:getGitWorkdir(ntRoot) abort
-    let job = gitstatus#job#Spawn('git-workdir',
+    call gitstatus#job#Spawn('git-workdir',
                 \ s:buildGitWorkdirCommand(a:ntRoot),
                 \ {
                 \ 'on_success_cb': function('s:onGitWorkdirSuccessCB'),
@@ -193,6 +195,7 @@ function! s:getGitWorkdir(ntRoot) abort
                 \ 'cwd': a:ntRoot,
                 \ })
 endfunction
+" vint: +ProhibitUnusedVariable
 
 function! s:buildGitWorkdirCommand(ntRoot) abort
     return [
@@ -262,17 +265,17 @@ endfunction
 function! s:recursiveCacheDir(cache, root, pathStr, statusKey, opts) abort
     let l:dirtyPath = fnamemodify(a:pathStr, ':p:h')
     while l:dirtyPath !=# a:root
-        let key = get(a:cache, l:dirtyPath, '')
+        let l:key = get(a:cache, l:dirtyPath, '')
         if get(a:opts, 'dir-dirty-only', 1)
-            if key ==# ''
+            if l:key ==# ''
                 let a:cache[l:dirtyPath] = 'Dirty'
             else
                 return
             endif
         else
-            if key ==# ''
+            if l:key ==# ''
                 let a:cache[l:dirtyPath] = a:statusKey
-            elseif key ==# 'Dirty' || key ==# a:statusKey
+            elseif l:key ==# 'Dirty' || l:key ==# a:statusKey
                 return
             else
                 let a:cache[l:dirtyPath] = 'Dirty'
@@ -380,8 +383,8 @@ function! s:dictEqual(c1, c2) abort
     if len(a:c1) != len(a:c2)
         return 0
     endif
-    for [key, value] in items(a:c1)
-        if !has_key(a:c2, key) || a:c2[key] !=# value
+    for [l:key, l:value] in items(a:c1)
+        if !has_key(a:c2, l:key) || a:c2[l:key] !=# l:value
             return 0
         endif
     endfor
@@ -414,15 +417,16 @@ function! s:tryUpdateNERDTreeUI(cache) abort
 endfunction
 
 function! s:refreshGitStatus(name, workdir) abort
-    let opts =  {
+    let l:opts =  {
                 \ 'on_failed_cb': function('s:onGitStatusFailedCB'),
                 \ 'on_success_cb': function('s:onGitStatusSuccessCB'),
                 \ 'cwd': a:workdir
                 \ }
-    let job = gitstatus#job#Spawn(a:name, s:buildGitStatusCommand(a:workdir), opts)
-    return job
+    let l:job = gitstatus#job#Spawn(a:name, s:buildGitStatusCommand(a:workdir), l:opts)
+    return l:job
 endfunction
 
+" vint: -ProhibitUnusedVariable
 function! s:onGitStatusSuccessCB(job) abort
     if !exists('g:NTGitWorkdir') || g:NTGitWorkdir !=# a:job.opts.cwd
         call s:logger.debug(printf("git workdir has changed: '%s' -> '%s'", a:job.opts.cwd, get(g:, 'NTGitWorkdir', '')))
@@ -436,18 +440,14 @@ function! s:onGitStatusSuccessCB(job) abort
 endfunction
 
 function! s:onGitStatusFailedCB(job) abort
-    let errormsg = join(a:job.err_chunks, '')
-    if errormsg =~# "error: option `porcelain' takes no value"
+    let l:errormsg = join(a:job.err_chunks, '')
+    if l:errormsg =~# "error: option `porcelain' takes no value"
         call s:logger.error(printf("'git status' command failed, please upgrade your git binary('v2.11.0' or higher) or set option 'g:NERDTreeGitStatusPorcelainVersion' to 1 in vimrc"))
         call s:disableLiveUpdate()
         unlet! g:NTGitWorkdir
     else
-        call s:logger.error(printf('job[%s] failed: %s', a:job.name, errormsg))
+        call s:logger.error(printf('job[%s] failed: %s', a:job.name, l:errormsg))
     endif
-endfunction
-
-function! s:hasPrefix(text, prefix) abort
-    return len(a:text) > len(a:prefix) && a:text[:len(a:prefix)-1] ==# a:prefix
 endfunction
 
 " FUNCTION: s:onCursorHold(fname) {{{2
@@ -464,8 +464,8 @@ function! s:onCursorHold(fname)
         return
     endif
 
-    let job = s:refreshGitStatus('cursor-hold', g:NTGitWorkdir)
-    call s:logger.debug('run cursor-hold job: ' . job.id)
+    let l:job = s:refreshGitStatus('cursor-hold', g:NTGitWorkdir)
+    call s:logger.debug('run cursor-hold job: ' . l:job.id)
 endfunction
 
 " FUNCTION: s:onFileUpdate(fname) {{{2
@@ -476,8 +476,13 @@ function! s:onFileUpdate(fname)
     if !exists('g:NTGitWorkdir') || !s:hasPrefix(l:fname, g:NTGitWorkdir)
         return
     endif
-    let job = s:refreshGitStatus('file-update', g:NTGitWorkdir)
-    call s:logger.debug('run file-update job: ' . job.id)
+    let l:job = s:refreshGitStatus('file-update', g:NTGitWorkdir)
+    call s:logger.debug('run file-update job: ' . l:job.id)
+endfunction
+" vint: +ProhibitUnusedVariable
+
+function! s:hasPrefix(text, prefix) abort
+    return len(a:text) > len(a:prefix) && a:text[:len(a:prefix)-1] ==# a:prefix
 endfunction
 
 function! NERDTreeGitStatusRefreshListener(event) abort
@@ -504,40 +509,43 @@ endfunction
 " Returns:
 " lineNum if the hunk found, -1 otherwise
 function! s:findHunk(node, direction) abort
-    let ui = b:NERDTree.ui
-    let rootLn = ui.getRootLineNum()
-    let totalLn = line('$')
-    let currLn = line('.') <= rootLn ? rootLn + 1 : line('.')
-    let step = a:direction > 0 ? 1 : -1
-    let lines = a:direction > 0 ?
-                \ range(currLn+1, totalLn, step) + range(rootLn+1, currLn-1, step) :
-                \ range(currLn-1, rootLn+1, step) + range(totalLn, currLn+1, step)
-    for ln in lines
-        let path = s:path2str(ui.getPath(ln))
-        if has_key(g:NERDTreeGitStatusCache, path)
-            return ln
+    let l:ui = b:NERDTree.ui
+    let l:rootLn = l:ui.getRootLineNum()
+    let l:totalLn = line('$')
+    let l:currLn = l:ui.getLineNum(a:node)
+    let l:currLn = l:currLn <= l:rootLn ? l:rootLn+1 : l:currLn
+    let l:step = a:direction > 0 ? 1 : -1
+    let l:lines = a:direction > 0 ?
+                \ range(l:currLn+1, l:totalLn, l:step) + range(l:rootLn+1, l:currLn-1, l:step) :
+                \ range(l:currLn-1, l:rootLn+1, l:step) + range(l:totalLn, l:currLn+1, l:step)
+    for l:ln in l:lines
+        let l:path = s:path2str(l:ui.getPath(l:ln))
+        if has_key(g:NERDTreeGitStatusCache, l:path)
+            return l:ln
         endif
     endfor
     return -1
 endfunction
 
+" vint: -ProhibitUnusedVariable
 " FUNCTION: s:jumpToNextHunk(node) {{{2
 function! s:jumpToNextHunk(node)
-    let ln = s:findHunk(a:node, 1)
-    if ln > 0
-        exec '' . ln
+    let l:ln = s:findHunk(a:node, 1)
+    if l:ln > 0
+        exec '' . l:ln
         call s:logger.info('Jump to next hunk')
     endif
 endfunction
 
 " FUNCTION: s:jumpToPrevHunk(node) {{{2
 function! s:jumpToPrevHunk(node)
-    let ln = s:findHunk(a:node, -1)
-    if ln > 0
-        exec '' . ln
+    let l:ln = s:findHunk(a:node, -1)
+    if l:ln > 0
+        exec '' . l:ln
         call s:logger.info('Jump to prev hunk')
     endif
 endfunction
+" vint: +ProhibitUnusedVariable
 
 " Function: s:SID()   {{{2
 function s:SID()
@@ -564,6 +572,9 @@ function! s:setupNERDTreeKeyMappings()
                 \ 'quickhelpText': 'Jump to prev git hunk' })
 endfunction
 
+
+" I don't know why, but vint said they are unused.
+" vint: -ProhibitUnusedVariable
 function! s:onNERDTreeDirChanged(path) abort
     call s:getGitWorkdir(a:path)
 endfunction
@@ -571,6 +582,7 @@ endfunction
 function! s:onNERDTreeInit(path) abort
     call s:getGitWorkdir(a:path)
 endfunction
+" vint: +ProhibitUnusedVariable
 
 function! s:enableLiveUpdate() abort
     augroup nerdtreegitplugin_liveupdate

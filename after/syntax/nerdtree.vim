@@ -25,30 +25,34 @@ if gitstatus#shouldConceal()
 endif
 
 function! s:highlightFromGroup(group) abort
-    let synid = synIDtrans(hlID(a:group))
-    let [ctermfg, guifg] = [synIDattr(synid, 'fg', 'cterm'), synIDattr(synid, 'fg', 'gui')]
-    return 'cterm=NONE ctermfg=' . ctermfg . ' ctermbg=NONE gui=NONE guifg=' . guifg . ' guibg=NONE'
+    let l:synid = synIDtrans(hlID(a:group))
+    let [l:ctermfg, l:guifg] = [synIDattr(l:synid, 'fg', 'cterm'), synIDattr(l:synid, 'fg', 'gui')]
+    return 'cterm=NONE ctermfg=' . l:ctermfg . ' ctermbg=NONE gui=NONE guifg=' . l:guifg . ' guibg=NONE'
 endfunction
 
-let s:synlist = [
-            \ ['Unmerged',  'Function'],
-            \ ['Modified',  'Special'],
-            \ ['Staged',    'Function'],
-            \ ['Renamed',   'Title'],
-            \ ['Unmerged',  'Label'],
-            \ ['Untracked', 'Comment'],
-            \ ['Dirty',     'Tag'],
-            \ ['Deleted',   'Operator'],
-            \ ['Ignored',   'SpecialKey'],
-            \ ['Clean',     'Method'],
-            \ ]
+function! s:setHightlighting() abort
+    let l:synlist = [
+                \ ['Unmerged',  'Function'],
+                \ ['Modified',  'Special'],
+                \ ['Staged',    'Function'],
+                \ ['Renamed',   'Title'],
+                \ ['Unmerged',  'Label'],
+                \ ['Untracked', 'Comment'],
+                \ ['Dirty',     'Tag'],
+                \ ['Deleted',   'Operator'],
+                \ ['Ignored',   'SpecialKey'],
+                \ ['Clean',     'Method'],
+                \ ]
 
-for [s:name, s:group] in s:synlist
-    let indicator = escape(s:getIndicator(s:name), '\#-*.$')
-    let synname = 'NERDTreeGitStatus' . s:name
-    execute 'silent! syntax match ' . synname . ' #\m\C\zs[' . indicator . ']\ze[^\]]*\]# containedin=NERDTreeFlags'
-    let hipat = get(get(g:, 'NERDTreeGitStatusHighlightingCustom', {}),
-                \ s:name,
-                \ s:highlightFromGroup(s:group))
-    execute 'silent! highlight ' . synname . ' ' . hipat
-endfor
+    for [l:name, l:group] in l:synlist
+        let l:indicator = escape(s:getIndicator(l:name), '\#-*.$')
+        let l:synname = 'NERDTreeGitStatus' . l:name
+        execute 'silent! syntax match ' . l:synname . ' #\m\C\zs[' . l:indicator . ']\ze[^\]]*\]# containedin=NERDTreeFlags'
+        let l:hipat = get(get(g:, 'NERDTreeGitStatusHighlightingCustom', {}),
+                    \ l:name,
+                    \ s:highlightFromGroup(l:group))
+        execute 'silent! highlight ' . l:synname . ' ' . l:hipat
+    endfor
+endfunction
+
+silent! call s:setHightlighting()
