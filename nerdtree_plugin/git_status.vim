@@ -573,7 +573,7 @@ function! s:setupNERDTreeKeyMappings()
 endfunction
 
 
-" I don't know why, but vint said say are unused.
+" I don't know why, but vint said they are unused.
 " vint: -ProhibitUnusedVariable
 function! s:onNERDTreeDirChanged(path) abort
     call s:getGitWorkdir(a:path)

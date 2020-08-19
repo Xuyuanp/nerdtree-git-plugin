@@ -28,11 +28,10 @@ let s:Job = {
 " disabled ProhibitUnusedVariable because lambda
 " vint: -ProhibitImplicitScopeVariable -ProhibitUnusedVariable
 function! s:newJob(name, opts) abort
-    let l:job = extend(deepcopy(s:Job), {
+    return extend(deepcopy(s:Job), {
         \ 'name': a:name,
         \ 'opts': a:opts
         \ })
-    return l:job
 endfunction
 
 function! s:Job.onStdoutCB(data) abort

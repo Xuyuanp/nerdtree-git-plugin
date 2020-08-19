@@ -52,6 +52,5 @@ endfunction
 " vint: +ProhibitImplicitScopeVariable
 
 function! gitstatus#log#NewLogger(level) abort
-    let l:obj = extend(copy(s:Logger), {'level': a:level})
-    return l:obj
+    return extend(copy(s:Logger), {'level': a:level})
 endfunction
