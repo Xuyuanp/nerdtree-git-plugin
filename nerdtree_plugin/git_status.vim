@@ -142,30 +142,9 @@ endif
 "
 " RETURNS:
 " absolute path
-if s:is_win
-    if exists('+shellslash')
-        function! s:path2str(path) abort
-            let l:sslbak = &shellslash
-            try
-                set shellslash
-                return a:path.str()
-            finally
-                let &shellslash = l:sslbak
-            endtry
-        endfunction
-    else
-        function! s:path2str(path) abort
-            let l:pathStr = a:path.str()
-            let l:pathStr = a:path.WinToUnixPath(l:pathStr)
-            let l:pathStr = a:path.drive . l:pathStr
-            return l:pathStr
-        endfunction
-    endif
-else
-    function! s:path2str(path) abort
-        return a:path.str()
-    endfunction
-endif
+function! s:path2str(path) abort
+    return gitstatus#util#FormatPath(a:path)
+endfunction
 
 " disable ProhibitUnusedVariable because these three functions used to callback
 " vint: -ProhibitUnusedVariable
@@ -197,38 +176,12 @@ function! s:getGitWorkdir(ntRoot) abort
 endfunction
 " vint: +ProhibitUnusedVariable
 
-function! s:buildGitWorkdirCommand(ntRoot) abort
-    return [
-                \ g:NERDTreeGitStatusGitBinPath,
-                \ '-C', a:ntRoot,
-                \ 'rev-parse',
-                \ '--show-toplevel'
-                \ ]
+function! s:buildGitWorkdirCommand(root) abort
+    return gitstatus#util#BuildGitWorkdirCommand(a:root, g:)
 endfunction
 
 function! s:buildGitStatusCommand(workdir) abort
-    let l:git_args = [
-                \ g:NERDTreeGitStatusGitBinPath,
-                \ '-C', a:workdir,
-                \ 'status',
-                \ '--porcelain' . (g:NERDTreeGitStatusPorcelainVersion ==# 2 ? '=v2' : ''),
-                \ '--untracked-files=' . g:NERDTreeGitStatusUntrackedFilesMode,
-                \ '-z'
-                \ ]
-    if g:NERDTreeGitStatusShowIgnored
-        let l:git_args += ['--ignored=traditional']
-    endif
-    if exists('g:NERDTreeGitStatusIgnoreSubmodules')
-        let l:ignore_args = '--ignore-submodules'
-        if g:NERDTreeGitStatusIgnoreSubmodules is# 'all' ||
-                    \ g:NERDTreeGitStatusIgnoreSubmodules is# 'dirty' ||
-                    \ g:NERDTreeGitStatusIgnoreSubmodules is# 'untracked' ||
-                    \ g:NERDTreeGitStatusIgnoreSubmodules is# 'none'
-            let l:ignore_args += '=' . g:NERDTreeGitStatusIgnoreSubmodules
-        endif
-        let l:git_args += [l:ignore_args]
-    endif
-    return l:git_args
+    return gitstatus#util#BuildGitStatusCommand(a:workdir, g:)
 endfunction
 
 function! s:parseGitStatusLines(workdir, statusLines) abort

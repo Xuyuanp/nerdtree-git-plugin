@@ -20,9 +20,7 @@ your information, the more likely they'll be able to help themselves. -->
 - [ ] I have searched the web for an answer to my question.
 
 #### Environment (for bug reports)
-- [ ] Operating System: 
-- [ ] Vim/Neovim version `:echo v:version`: 
-- [ ] NERDTree version, found on 1st line in NERDTree quickhelp `?`: 
+- [ ] Operating System:
 - [ ] vimrc settings
     ```vim
     " all settings about nerdtree and other plugins
@@ -31,13 +29,13 @@ your information, the more likely they'll be able to help themselves. -->
         - [ ] jistr/vim-nerdtree-tabs
         - [ ] ryanoasis/vim-devicons
         - [ ] tiagofumo/vim-nerdtree-syntax-highlight
-        - [ ] Others (specify): 
-    - [ ] I've verified the issue occurs with only nerdtree-git-plugin installed.
+        - [ ] Others (specify):
+    - [ ] I've verified the issue occurs with only `nerdtree-git-plugin` installed.
+- [ ] Copy-Paste `call gitstatus#doctor#Say()` outputs
 
 #### Steps to Reproduce the Issue
-1. 
+1.
 
 #### Current Result (Include screenshots where appropriate.)
 
 #### Expected Result
-
