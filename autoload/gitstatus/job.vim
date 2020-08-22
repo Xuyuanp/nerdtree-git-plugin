@@ -86,11 +86,11 @@ if s:nvim
 elseif s:vim8
     function! s:Job.run(cmd) abort
         let options = {
-                    \ 'out_cb':   { _ch, data  -> self.onStdoutCB([data]) },
-                    \ 'err_cb':   { _ch, data  -> self.onStderrCB([data]) },
-                    \ 'exit_cb':  { _ch, _data -> self.onExitCB() },
-                    \ 'out_mode': 'raw',
-                    \ 'err_mode': 'raw',
+                    \ 'out_cb':   { _ch, data -> self.onStdoutCB([data]) },
+                    \ 'err_cb':   { _ch, data -> self.onStderrCB([data]) },
+                    \ 'close_cb': { _ch -> self.onExitCB() },
+                    \ 'out_mode': 'nl',
+                    \ 'err_mode': 'nl',
                     \ }
         if has('patch-8.1.350')
             let options['noblock'] = 1
