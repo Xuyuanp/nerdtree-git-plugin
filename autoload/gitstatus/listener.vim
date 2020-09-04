@@ -52,11 +52,11 @@ function!s:Listener.getIndicatorByPath(path) abort
         return gitstatus#getIndicator(l:statusKey)
     endif
 
-    if get(self.opts, 'NERDTreeGitStatusShowClean', 0)
+    if self.getOption('ShowClean', 0)
         return gitstatus#getIndicator('Clean')
     endif
 
-    if get(self.opts, 'NERDTreeGitStatusConcealBrackets', 0) && get(self.opts, 'NERDTreeGitStatusAlignIfConceal', 0)
+    if self.getOption('ConcealBrackets', 0) && self.getOption('AlignIfConceal', 0)
         return ' '
     endif
     return ''
@@ -64,29 +64,48 @@ endfunction
 
 function! s:Listener.SetNext(cache) abort
     let self.next = a:cache
-    return self.Changed()
 endfunction
 
-function! s:Listener.Changed() abort
-    return !s:dictEqual(self.current, self.next)
+function! s:Listener.HasPath(path_str) abort
+    return has_key(self.current, a:path_str)
 endfunction
 
-function! s:Listener.Update() abort
+function! s:Listener.changed() abort
+    return self.current !=# self.next
+endfunction
+
+function! s:Listener.update() abort
     let self.current = self.next
 endfunction
-" vint: +ProhibitImplicitScopeVariable
 
-function! s:dictEqual(c1, c2) abort
-    if len(a:c1) != len(a:c2)
-        return 0
+function! s:Listener.TryUpdateNERDTreeUI() abort
+    if !g:NERDTree.IsOpen()
+        return
     endif
-    for [l:key, l:value] in items(a:c1)
-        if !has_key(a:c2, l:key) || a:c2[l:key] !=# l:value
-            return 0
-        endif
-    endfor
-    return 1
+
+    if !self.changed()
+        return
+    endif
+
+    call self.update()
+
+    let l:winnr = winnr()
+    let l:altwinnr = winnr('#')
+
+    try
+        call g:NERDTree.CursorToTreeWin()
+        call b:NERDTree.root.refreshFlags()
+        call NERDTreeRender()
+    finally
+        exec l:altwinnr . 'wincmd w'
+        exec l:winnr . 'wincmd w'
+    endtry
 endfunction
+
+function! s:Listener.getOption(name, default) abort
+    return get(self.opts, 'NERDTreeGitStatus' . a:name, a:default)
+endfunction
+" vint: +ProhibitImplicitScopeVariable
 
 function! gitstatus#listener#New(opts) abort
     return extend(deepcopy(s:Listener), {'opts': a:opts})

@@ -301,30 +301,6 @@ function! s:getStatusKey(x, y)
     endif
 endfunction
 
-function! s:tryUpdateNERDTreeUI() abort
-    if !g:NERDTree.IsOpen()
-        return
-    endif
-
-    if !s:listener.Changed()
-        return
-    endif
-
-    call s:listener.Update()
-
-    let l:winnr = winnr()
-    let l:altwinnr = winnr('#')
-
-    try
-        call g:NERDTree.CursorToTreeWin()
-        call b:NERDTree.root.refreshFlags()
-        call NERDTreeRender()
-    finally
-        exec l:altwinnr . 'wincmd w'
-        exec l:winnr . 'wincmd w'
-    endtry
-endfunction
-
 function! s:refreshGitStatus(name, workdir) abort
     let l:opts =  {
                 \ 'on_failed_cb': function('s:onGitStatusFailedCB'),
@@ -345,9 +321,8 @@ function! s:onGitStatusSuccessCB(job) abort
     let l:lines = split(l:output, "\n")
     let l:cache = s:parseGitStatusLines(a:job.opts.cwd, l:lines)
 
-    if s:listener.SetNext(l:cache)
-        call s:tryUpdateNERDTreeUI()
-    endif
+    call s:listener.SetNext(l:cache)
+    call s:listener.TryUpdateNERDTreeUI()
 endfunction
 
 function! s:onGitStatusFailedCB(job) abort
@@ -421,7 +396,7 @@ function! s:findHunk(node, direction) abort
                 \ range(l:currLn-1, l:rootLn+1, l:step) + range(l:totalLn, l:currLn+1, l:step)
     for l:ln in l:lines
         let l:path = s:path2str(l:ui.getPath(l:ln))
-        if has_key(s:listener.current, l:path)
+        if s:listener.HasPath(l:path)
             return l:ln
         endif
     endfor
@@ -495,7 +470,7 @@ function! s:enableLiveUpdate() abort
         if g:NERDTreeGitStatusUpdateOnCursorHold
             autocmd CursorHold * silent! call s:onCursorHold(expand('%:p'))
         endif
-        autocmd BufEnter NERD_tree_* call s:tryUpdateNERDTreeUI()
+        autocmd BufEnter NERD_tree_* call s:listener.TryUpdateNERDTreeUI()
     augroup end
 endfunction
 
