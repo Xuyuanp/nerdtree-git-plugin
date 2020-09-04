@@ -96,12 +96,6 @@ if !executable(g:NERDTreeGitStatusGitBinPath)
     finish
 endif
 
-let g:NERDTreeGitStatusCache = {}
-
-function! s:formatIndicator(indicator) abort
-    return gitstatus#shouldConceal() ? printf(' %s ', a:indicator) : a:indicator
-endfunction
-
 if g:NERDTreeGitStatusPorcelainVersion ==# 2
     function! s:processLine(sline) abort
         if a:sline[0] ==# '1'
@@ -238,31 +232,6 @@ function! s:recursiveCacheDir(cache, root, pathStr, statusKey, opts) abort
     endwhile
 endfunction
 
-" FUNCTION: s:getIndicatorByPath(path) {{{2
-" return the indicator of the path
-" Args: path
-function! s:getIndicatorByPath(path) abort
-    let l:pathStr = s:path2str(a:path)
-    let l:statusKey = get(g:NERDTreeGitStatusCache, l:pathStr, '')
-
-    if l:statusKey !=# ''
-        return s:getIndicator(l:statusKey)
-    endif
-
-    if g:NERDTreeGitStatusShowClean
-        return s:getIndicator('Clean')
-    endif
-
-    if g:NERDTreeGitStatusConcealBrackets && g:NERDTreeGitStatusAlignIfConceal
-        return ' '
-    endif
-    return ''
-endfunction
-
-function! s:getIndicator(statusKey) abort
-    return gitstatus#getIndicator(a:statusKey)
-endfunction
-
 let s:unmerged_status = {
             \ 'DD': 1,
             \ 'AU': 1,
@@ -332,29 +301,16 @@ function! s:getStatusKey(x, y)
     endif
 endfunction
 
-function! s:dictEqual(c1, c2) abort
-    if len(a:c1) != len(a:c2)
-        return 0
-    endif
-    for [l:key, l:value] in items(a:c1)
-        if !has_key(a:c2, l:key) || a:c2[l:key] !=# l:value
-            return 0
-        endif
-    endfor
-    return 1
-endfunction
-
-function! s:tryUpdateNERDTreeUI(cache) abort
-    if s:dictEqual(g:NERDTreeGitStatusCache, a:cache)
-        " nothing to update
-        return
-    endif
-
-    let g:NERDTreeGitStatusCache = a:cache
-
+function! s:tryUpdateNERDTreeUI() abort
     if !g:NERDTree.IsOpen()
         return
     endif
+
+    if !s:listener.Changed()
+        return
+    endif
+
+    call s:listener.Update()
 
     let l:winnr = winnr()
     let l:altwinnr = winnr('#')
@@ -389,7 +345,9 @@ function! s:onGitStatusSuccessCB(job) abort
     let l:lines = split(l:output, "\n")
     let l:cache = s:parseGitStatusLines(a:job.opts.cwd, l:lines)
 
-    call s:tryUpdateNERDTreeUI(l:cache)
+    if s:listener.SetNext(l:cache)
+        call s:tryUpdateNERDTreeUI()
+    endif
 endfunction
 
 function! s:onGitStatusFailedCB(job) abort
@@ -435,23 +393,13 @@ endfunction
 " vint: +ProhibitUnusedVariable
 
 function! s:hasPrefix(text, prefix) abort
-    return len(a:text) > len(a:prefix) && a:text[:len(a:prefix)-1] ==# a:prefix
+    return len(a:text) >= len(a:prefix) && a:text[:len(a:prefix)-1] ==# a:prefix
 endfunction
 
-function! NERDTreeGitStatusRefreshListener(event) abort
-    let l:path = a:event.subject
-    let l:indicator = s:getIndicatorByPath(l:path)
-    call l:path.flagSet.clearFlags('git')
-    if l:indicator !=# ''
-        let l:indicator = s:formatIndicator(l:indicator)
-        call l:path.flagSet.addFlag('git', l:indicator)
-    endif
-endfunction
-
-function! s:setupNERDTreeListeners() abort
-    call g:NERDTreePathNotifier.AddListener('init', 'NERDTreeGitStatusRefreshListener')
-    call g:NERDTreePathNotifier.AddListener('refresh', 'NERDTreeGitStatusRefreshListener')
-    call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeGitStatusRefreshListener')
+function! s:setupNERDTreeListeners(listener) abort
+    call g:NERDTreePathNotifier.AddListener('init', a:listener.OnInit)
+    call g:NERDTreePathNotifier.AddListener('refresh', a:listener.OnRefresh)
+    call g:NERDTreePathNotifier.AddListener('refreshFlags', a:listener.OnRefreshFlags)
 endfunction
 
 " FUNCTION: s:findHunk(node, direction)
@@ -473,7 +421,7 @@ function! s:findHunk(node, direction) abort
                 \ range(l:currLn-1, l:rootLn+1, l:step) + range(l:totalLn, l:currLn+1, l:step)
     for l:ln in l:lines
         let l:path = s:path2str(l:ui.getPath(l:ln))
-        if has_key(g:NERDTreeGitStatusCache, l:path)
+        if has_key(s:listener.current, l:path)
             return l:ln
         endif
     endfor
@@ -547,6 +495,7 @@ function! s:enableLiveUpdate() abort
         if g:NERDTreeGitStatusUpdateOnCursorHold
             autocmd CursorHold * silent! call s:onCursorHold(expand('%:p'))
         endif
+        autocmd BufEnter NERD_tree_* call s:tryUpdateNERDTreeUI()
     augroup end
 endfunction
 
@@ -563,4 +512,6 @@ augroup nerdtreegitplugin
 augroup end
 
 call s:setupNERDTreeKeyMappings()
-call s:setupNERDTreeListeners()
+
+let s:listener = gitstatus#listener#New(g:)
+call s:setupNERDTreeListeners(s:listener)
