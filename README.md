@@ -1,6 +1,9 @@
 nerdtree-git-plugin
 ===================
 [![Github Action](https://github.com/Xuyuanp/nerdtree-git-plugin/workflows/CI/badge.svg)](https://github.com/Xuyuanp/nerdtree-git-plugin/actions?query=workflow%3ACI)
+[![License: WTFPL](https://img.shields.io/github/license/Xuyuanp/nerdtree-git-plugin)](http://www.wtfpl.net/about/)
+[![GitHub contributors](https://img.shields.io/github/contributors/Xuyuanp/nerdtree-git-plugin)](https://github.com/Xuyuanp/nerdtree-git-plugin/graphs/contributors)
+[![HitCount](http://hits.dwyl.com/Xuyuanp/nerdtree-git-plugin.svg)](http://hits.dwyl.com/Xuyuanp/nerdtree-git-plugin)
 
 A plugin of [NERDTree](https://github.com/preservim/nerdtree) showing git status flags.
 
