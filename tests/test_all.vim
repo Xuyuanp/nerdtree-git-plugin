@@ -1,5 +1,6 @@
 let s:suite = themis#suite('Test for nerdtree-git-plugin')
 let s:assert = themis#helper('assert')
+call themis#helper('command').with(s:)
 
 function! s:suite.BuildGitWorkdirCommand() abort
     let l:cmd = gitstatus#util#BuildGitWorkdirCommand('/workdir', {})
@@ -48,4 +49,27 @@ function! s:suite.BuildGitStatusCommand() abort
                 \ '--untracked-files=all',
                 \ '--ignored=traditional',
                 \ '--ignore-submodules=dirty'])
+endfunction
+
+function! s:suite.Logger() abort
+    let l:logger = gitstatus#log#NewLogger(1) " info
+    let l:messages = execute('messages')
+
+    call l:logger.debug('debug')
+    call s:assert.equal(execute('messages'), l:messages)
+
+    call l:logger.error('error')
+    call s:assert.equal(execute('messages'), l:messages . "\n[nerdtree-git-status] error")
+endfunction
+
+function! s:suite.CustomIndicator() abort
+    let g:NERDTreeGitStatusIndicatorMapCustom = {'Untracked': '~'}
+
+    let l:staged = gitstatus#getIndicator('Staged')
+
+    call s:assert.equal(gitstatus#getIndicator('Staged'), l:staged)
+    call s:assert.equal(gitstatus#getIndicator('Untracked'), '~')
+
+    " Vim(return):E716: Key not present in Dictionary
+    Throws /E716/ gitstatus#getIndicator('no such status')
 endfunction
