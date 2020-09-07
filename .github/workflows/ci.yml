@@ -30,6 +30,11 @@ jobs:
       with:
         repository: thinca/vim-themis
         path: vim-themis
+    - name: Checkout nerdtree
+      uses: actions/checkout@v2
+      with:
+        repository: preservim/nerdtree
+        path: /nerdtree
     - name: Install Vim or Neovim
       uses: rhysd/action-setup-vim@v1
       id: vim
@@ -42,5 +47,5 @@ jobs:
         THEMIS_PROFILE: profile.txt
       run: |
         echo $THEMIS_VIM
-        ./vim-themis/bin/themis tests/
+        ./vim-themis/bin/themis --runtimepath /nerdtree --reporter spec tests/
     # TODO: coverage
