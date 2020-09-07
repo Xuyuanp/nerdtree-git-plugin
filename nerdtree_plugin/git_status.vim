@@ -96,37 +96,6 @@ if !executable(g:NERDTreeGitStatusGitBinPath)
     finish
 endif
 
-if g:NERDTreeGitStatusPorcelainVersion ==# 2
-    function! s:processLine(sline) abort
-        if a:sline[0] ==# '1'
-            let l:statusKey = s:getStatusKey(a:sline[2], a:sline[3])
-            let l:pathStr = a:sline[113:]
-        elseif a:sline[0] ==# '2'
-            let l:statusKey = 'Renamed'
-            let l:pathStr = a:sline[113:]
-            let l:pathStr = l:pathStr[stridx(l:pathStr, ' ')+1:]
-        elseif a:sline[0] ==# 'u'
-            let l:statusKey = 'Unmerged'
-            let l:pathStr = a:sline[161:]
-        elseif a:sline[0] ==# '?'
-            let l:statusKey = 'Untracked'
-            let l:pathStr = a:sline[2:]
-        elseif a:sline[0] ==# '!'
-            let l:statusKey = 'Ignored'
-            let l:pathStr = a:sline[2:]
-        else
-            throw '[nerdtree_git_status] unknown status: ' . a:sline
-        endif
-        return [l:pathStr, l:statusKey]
-    endfunction
-else
-    function! s:processLine(sline) abort
-        let l:pathStr = a:sline[3:]
-        let l:statusKey = s:getStatusKey(a:sline[0], a:sline[1])
-        return [l:pathStr, l:statusKey]
-    endfunction
-endif
-
 " FUNCTION: path2str
 " This function is used to format nerdtree.Path.
 " For Windows, returns in format 'C:/path/to/file'
@@ -144,7 +113,7 @@ endfunction
 " vint: -ProhibitUnusedVariable
 function! s:onGitWorkdirSuccessCB(job) abort
     let g:NTGitWorkdir = split(join(a:job.chunks, ''), "\n")[0]
-    call s:logger.debug(printf("'%s' is in this git repo: '%s'", a:job.opts.cwd, g:NTGitWorkdir))
+    call s:logger.debug(printf("'%s' is in a git repo: '%s'", a:job.opts.cwd, g:NTGitWorkdir))
     call s:enableLiveUpdate()
 
     call s:refreshGitStatus('init', g:NTGitWorkdir)
@@ -178,129 +147,6 @@ function! s:buildGitStatusCommand(workdir) abort
     return gitstatus#util#BuildGitStatusCommand(a:workdir, g:)
 endfunction
 
-function! s:parseGitStatusLines(workdir, statusLines) abort
-    let l:cache = {}
-    let l:opts = {'dir-dirty-only': g:NERDTreeGitStatusDirDirtyOnly}
-    let l:is_rename = 0
-    for l:statusLine in a:statusLines
-        " cache git status of files
-        if l:is_rename
-            call s:recursiveCacheDir(l:cache, a:workdir, a:workdir . '/' . l:statusLine, 'Dirty', l:opts)
-            let l:is_rename = 0
-            continue
-        endif
-        let [l:pathStr, l:statusKey] = s:processLine(l:statusLine)
-
-        let l:pathStr = a:workdir . '/' . l:pathStr
-        if l:pathStr[-1:-1] is# '/'
-            let l:pathStr = l:pathStr[:-2]
-        endif
-        let l:is_rename = l:statusKey is# 'Renamed'
-        let l:cache[l:pathStr] = l:statusKey
-
-        if l:statusKey ==# 'Ignored'
-            if isdirectory(l:pathStr)
-                let l:cache[l:pathStr] = l:statusKey
-            endif
-        else
-            call s:recursiveCacheDir(l:cache, a:workdir, l:pathStr, l:statusKey, l:opts)
-        endif
-    endfor
-    return l:cache
-endfunction
-
-function! s:recursiveCacheDir(cache, root, pathStr, statusKey, opts) abort
-    let l:dirtyPath = fnamemodify(a:pathStr, ':p:h')
-    while l:dirtyPath !=# a:root
-        let l:key = get(a:cache, l:dirtyPath, '')
-        if get(a:opts, 'dir-dirty-only', 1)
-            if l:key ==# ''
-                let a:cache[l:dirtyPath] = 'Dirty'
-            else
-                return
-            endif
-        else
-            if l:key ==# ''
-                let a:cache[l:dirtyPath] = a:statusKey
-            elseif l:key ==# 'Dirty' || l:key ==# a:statusKey
-                return
-            else
-                let a:cache[l:dirtyPath] = 'Dirty'
-            endif
-        endif
-        let l:dirtyPath = fnamemodify(l:dirtyPath, ':h')
-    endwhile
-endfunction
-
-let s:unmerged_status = {
-            \ 'DD': 1,
-            \ 'AU': 1,
-            \ 'UD': 1,
-            \ 'UA': 1,
-            \ 'DU': 1,
-            \ 'AA': 1,
-            \ 'UU': 1,
-            \ }
-
-" Function: s:getStatusKey() function {{{2
-" This function is used to get git status key
-"
-" Args:
-" x: index tree
-" y: work tree
-"
-"Returns:
-" status key
-"
-" man git-status
-" X          Y     Meaning
-" -------------------------------------------------
-"           [MD]   not updated
-" M        [ MD]   updated in index
-" A        [ MD]   added to index
-" D         [ M]   deleted from index
-" R        [ MD]   renamed in index
-" C        [ MD]   copied in index
-" [MARC]           index and work tree matches
-" [ MARC]     M    work tree changed since index
-" [ MARC]     D    deleted in work tree
-" -------------------------------------------------
-" D           D    unmerged, both deleted
-" A           U    unmerged, added by us
-" U           D    unmerged, deleted by them
-" U           A    unmerged, added by them
-" D           U    unmerged, deleted by us
-" A           A    unmerged, both added
-" U           U    unmerged, both modified
-" -------------------------------------------------
-" ?           ?    untracked
-" !           !    ignored
-" -------------------------------------------------
-function! s:getStatusKey(x, y)
-    let l:xy = a:x . a:y
-    if get(s:unmerged_status, l:xy, 0)
-        return 'Unmerged'
-    elseif l:xy ==# '??'
-        return 'Untracked'
-    elseif l:xy ==# '!!'
-        return 'Ignored'
-    elseif a:y ==# 'M'
-        return 'Modified'
-    elseif a:y ==# 'D'
-        return 'Deleted'
-    elseif a:y =~# '[RC]'
-        return 'Renamed'
-    elseif a:x ==# 'D'
-        return 'Deleted'
-    elseif a:x =~# '[MA]'
-        return 'Staged'
-    elseif a:x =~# '[RC]'
-        return 'Renamed'
-    else
-        return 'Unknown'
-    endif
-endfunction
-
 function! s:refreshGitStatus(name, workdir) abort
     let l:opts =  {
                 \ 'on_failed_cb': function('s:onGitStatusFailedCB'),
@@ -319,7 +165,7 @@ function! s:onGitStatusSuccessCB(job) abort
     endif
     let l:output = join(a:job.chunks, '')
     let l:lines = split(l:output, "\n")
-    let l:cache = s:parseGitStatusLines(a:job.opts.cwd, l:lines)
+    let l:cache = gitstatus#util#ParseGitStatusLines(a:job.opts.cwd, l:lines, g:)
 
     call s:listener.SetNext(l:cache)
     call s:listener.TryUpdateNERDTreeUI()
