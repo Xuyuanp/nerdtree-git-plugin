@@ -2,6 +2,14 @@ let s:suite = themis#suite('Test for nerdtree-git-plugin')
 let s:assert = themis#helper('assert')
 call themis#helper('command').with(s:)
 
+function! s:suite.Initializing() abort
+    NERDTreeFocus
+    call s:assert.exists('g:NERDTree')
+    call s:assert.exists('g:loaded_nerdtree_git_status')
+    call g:NERDTree.CursorToTreeWin()
+    call s:assert.exists('b:NERDTree')
+endfunction
+
 function! s:suite.BuildGitWorkdirCommand() abort
     let l:cmd = gitstatus#util#BuildGitWorkdirCommand('/workdir', {})
     call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'rev-parse', '--show-toplevel'])
