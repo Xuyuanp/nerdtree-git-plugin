@@ -1,5 +1,6 @@
 nerdtree-git-plugin
 ===================
+[![Github Action](https://github.com/Xuyuanp/nerdtree-git-plugin/workflows/CI/badge.svg)](https://github.com/Xuyuanp/nerdtree-git-plugin/actions?query=workflow%3ACI)
 
 A plugin of [NERDTree](https://github.com/preservim/nerdtree) showing git status flags.
 
