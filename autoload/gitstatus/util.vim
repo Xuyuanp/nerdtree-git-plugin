@@ -73,7 +73,7 @@ function! gitstatus#util#BuildGitStatusCommand(root, opts) abort
     endif
 
     if has_key(a:opts, 'NERDTreeGitStatusIgnoreSubmodules')
-        let l:cmd += ['--ignore-submodules=' . a:opts['NERDTreeGitStatusIgnoreSubModules']]
+        let l:cmd += ['--ignore-submodules=' . a:opts['NERDTreeGitStatusIgnoreSubmodules']]
     endif
 
     return l:cmd
