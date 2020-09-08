@@ -81,3 +81,29 @@ function! s:suite.CustomIndicator() abort
     " Vim(return):E716: Key not present in Dictionary
     Throws /E716/ gitstatus#getIndicator('no such status')
 endfunction
+
+function! s:suite.UpdateParentDirsStatus() abort
+    let l:opts = {'NERDTreeGitStatusDirDirtyOnly': 1}
+    let l:root = '/root'
+    let l:cache = {}
+    let l:pathStr = '/root/dir1/dir2/dir3'
+    let l:cache[l:pathStr] = 'Untracked'
+    call gitstatus#util#UpdateParentDirsStatus(l:cache, l:root, l:pathStr, 'Untracked', l:opts)
+    call s:assert.equal({'/root/dir1': 'Dirty', '/root/dir1/dir2': 'Dirty', '/root/dir1/dir2/dir3': 'Untracked'}, l:cache)
+
+    let l:pathStr = '/root/dir1/dir2/file0'
+    let l:cache[l:pathStr] = 'Staged'
+    call gitstatus#util#UpdateParentDirsStatus(l:cache, l:root, l:pathStr, 'Staged', l:opts)
+    call s:assert.equal({'/root/dir1': 'Dirty', '/root/dir1/dir2': 'Dirty', '/root/dir1/dir2/dir3': 'Untracked', '/root/dir1/dir2/file0': 'Staged'}, l:cache)
+
+    let l:opts = {'NERDTreeGitStatusDirDirtyOnly': 0}
+    let l:cache = {}
+    let l:pathStr = '/root/dir1/dir2/dir3'
+    let l:cache[l:pathStr] = 'Untracked'
+    call gitstatus#util#UpdateParentDirsStatus(l:cache, l:root, l:pathStr, 'Untracked', l:opts)
+    call s:assert.equal({'/root/dir1': 'Untracked', '/root/dir1/dir2': 'Untracked', '/root/dir1/dir2/dir3': 'Untracked'}, l:cache)
+
+    let l:cache['/root/dir1/file1'] = 'Staged'
+    call gitstatus#util#UpdateParentDirsStatus(l:cache, l:root, '/root/dir1/file1', 'Staged', l:opts)
+    call s:assert.equal({'/root/dir1': 'Dirty','/root/dir1/file1': 'Staged', '/root/dir1/dir2': 'Untracked', '/root/dir1/dir2/dir3': 'Untracked'}, l:cache)
+endfunction
