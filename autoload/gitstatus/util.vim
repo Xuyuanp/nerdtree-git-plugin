@@ -201,10 +201,11 @@ function! gitstatus#util#ParseGitStatusLine(statusLine, opts) abort
 endfunction
 
 function! gitstatus#util#UpdateParentDirsStatus(cache, root, pathStr, statusKey, opts) abort
-    let l:dirtyPath = fnamemodify(a:pathStr, ':p:h')
+    let l:dirtyPath = fnamemodify(a:pathStr, ':h')
+    let l:dir_dirty_only = get(a:opts, 'NERDTreeGitStatusDirDirtyOnly', 1)
     while l:dirtyPath !=# a:root
         let l:key = get(a:cache, l:dirtyPath, '')
-        if get(a:opts, 'NERDTreeGitStatusDirDirtyOnly', 1)
+        if l:dir_dirty_only
             if l:key ==# ''
                 let a:cache[l:dirtyPath] = 'Dirty'
             else
