@@ -76,7 +76,6 @@ endfunction
 let s:need_migrate_vals = {
             \ 'g:NERDTreeShowGitStatus':      'g:NERDTreeGitStatusEnable',
             \ 'g:NERDTreeUpdateOnWrite':      'g:NERDTreeGitStatusUpdateOnWrite',
-            \ 'g:NERDTreeUpdateOnCursorHold': 'g:NERDTreeGitStatusUpdateOnCursorHold',
             \ 'g:NERDTreeMapNextHunk':        'g:NERDTreeGitStatusMapNextHunk',
             \ 'g:NERDTreeMapPrevHunk':        'g:NERDTreeGitStatusMapPrevHunk',
             \ 'g:NERDTreeShowIgnoredStatus':  'g:NERDTreeGitStatusShowIgnored',
