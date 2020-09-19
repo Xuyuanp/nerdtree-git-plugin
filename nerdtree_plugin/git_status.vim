@@ -176,6 +176,8 @@ function! s:onGitStatusFailedCB(job) abort
         call s:logger.error(printf("'git status' command failed, please upgrade your git binary('v2.11.0' or higher) or set option 'g:NERDTreeGitStatusPorcelainVersion' to 1 in vimrc"))
         call s:disableLiveUpdate()
         unlet! g:NTGitWorkdir
+    elseif l:errormsg =~# '^warning: could not open .* Permission denied'
+        call s:onGitStatusSuccessCB(a:job)
     else
         call s:logger.error(printf('job[%s] failed: %s', a:job.name, l:errormsg))
     endif
