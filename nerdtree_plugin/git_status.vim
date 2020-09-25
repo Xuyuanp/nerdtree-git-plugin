@@ -317,6 +317,10 @@ function! s:enableLiveUpdate() abort
         if g:NERDTreeGitStatusUpdateOnCursorHold
             autocmd CursorHold * silent! call s:onCursorHold(expand('%:p'))
         endif
+
+        " TODO: is it necessary to pass the buffer name?
+        autocmd User FugitiveChanged silent! call s:onFileUpdate(expand('%:p'))
+
         autocmd BufEnter NERD_tree_* call s:listener.TryUpdateNERDTreeUI()
     augroup end
 endfunction
