@@ -97,8 +97,8 @@ function! s:Listener.TryUpdateNERDTreeUI() abort
         call b:NERDTree.root.refreshFlags()
         call NERDTreeRender()
     finally
-        exec l:altwinnr . 'wincmd w'
-        exec l:winnr . 'wincmd w'
+        noautocmd exec l:altwinnr . 'wincmd w'
+        noautocmd exec l:winnr . 'wincmd w'
     endtry
 endfunction
 
