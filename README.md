@@ -19,6 +19,10 @@ Plug 'preservim/nerdtree' |
             \ Plug 'Xuyuanp/nerdtree-git-plugin'
 ```
 
+## New project
+
+[Yanil](https://github.com/Xuyuanp/yanil): Another nerdtree like plugin for neovim(>= 0.5.0) only. I'm focusing on this project.
+
 ## FAQ
 
 > Got error message like `Error detected while processing function
