@@ -20,32 +20,32 @@ endfunction
 
 function! s:suite.BuildGitStatusCommand() abort
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {})
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain=v2', '-z'])
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain=v2', '-z'])
 
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {
                 \ 'NERDTreeGitStatusPorcelainVersion': 1
                 \ })
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain', '-z'])
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain', '-z'])
 
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {
                 \ 'NERDTreeGitStatusUntrackedFilesMode': 'all'
                 \ })
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain=v2', '-z', '--untracked-files=all'])
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain=v2', '-z', '--untracked-files=all'])
 
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {
                 \ 'NERDTreeGitStatusShowIgnored': 1
                 \ })
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain=v2', '-z', '--ignored=traditional'])
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain=v2', '-z', '--ignored=traditional'])
 
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {
                 \ 'NERDTreeGitStatusShowIgnored': 0
                 \ })
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain=v2', '-z'])
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain=v2', '-z'])
 
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {
                 \ 'NERDTreeGitStatusIgnoreSubmodules': 'dirty'
                 \ })
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain=v2', '-z', '--ignore-submodules=dirty'])
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain=v2', '-z', '--ignore-submodules=dirty'])
 
     let l:cmd = gitstatus#util#BuildGitStatusCommand('/workdir', {
                 \ 'NERDTreeGitStatusPorcelainVersion': 1,
@@ -53,7 +53,7 @@ function! s:suite.BuildGitStatusCommand() abort
                 \ 'NERDTreeGitStatusShowIgnored': 1,
                 \ 'NERDTreeGitStatusIgnoreSubmodules': 'dirty'
                 \ })
-    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', 'status', '--porcelain', '-z',
+    call s:assert.equal(l:cmd, ['git', '-C', '/workdir', '--no-optional-locks', 'status', '--porcelain', '-z',
                 \ '--untracked-files=all',
                 \ '--ignored=traditional',
                 \ '--ignore-submodules=dirty'])
