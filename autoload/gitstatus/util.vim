@@ -60,7 +60,6 @@ function! gitstatus#util#BuildGitStatusCommand(root, opts) abort
     let l:cmd = [
                 \ get(a:opts, 'NERDTreeGitStatusGitBinPath', 'git'),
                 \ '-C', a:root,
-                \ '--no-optional-locks',
                 \ 'status',
                 \ '--porcelain' . (get(a:opts, 'NERDTreeGitStatusPorcelainVersion', 2) ==# 2 ? '=v2' : ''),
                 \ '-z'
