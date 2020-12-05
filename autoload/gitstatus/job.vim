@@ -72,6 +72,7 @@ if s:nvim
                     \ 'on_stdout': {_job_id, data, _event  -> self.onStdoutCB(data)},
                     \ 'on_stderr': {_job_id, data, _event  -> self.onStderrCB(data)},
                     \ 'on_exit':   {_job_id, _data, _event -> self.onExitCB()},
+                    \ 'env':       {'GIT_OPTIONAL_LOCKS': '0'},
                     \ })
         let self.id = jid
         let self.running = jid > 0
@@ -91,6 +92,7 @@ elseif s:vim8
                     \ 'close_cb': { _ch -> self.onExitCB() },
                     \ 'out_mode': 'nl',
                     \ 'err_mode': 'nl',
+                    \ 'env':      {'GIT_OPTIONAL_LOCKS': '0'},
                     \ }
         if has('patch-8.1.350')
             let options['noblock'] = 1
@@ -108,7 +110,10 @@ elseif s:vim8
     endfunction
 else
     function! s:Job.run(cmd) abort
+        let bak = $GIT_OPTIONAL_LOCKS
+        let $GIT_OPTIONAL_LOCKS = 0
         let output = substitute(system(join(a:cmd, ' ')), "\<C-A>", "\n", 'g')
+        let $GIT_OPTIONAL_LOCKS = bak
         let self.failed = v:shell_error isnot# 0
         if self.failed
             let self.err_chunks = [output]
