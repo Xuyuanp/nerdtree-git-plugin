@@ -84,7 +84,7 @@ let g:NERDTreeGitStatusUntrackedFilesMode = 'all' " a heave feature too. default
 > How to set `git` executable file path?
 
 ```vim
-let g:NERDTreeGitStatusGitBinPath = '/your/file/path' " defualt: git (auto find in path)
+let g:NERDTreeGitStatusGitBinPath = '/your/file/path' " default: git (auto find in path)
 ```
 
 > How to show `Clean` indicator?
