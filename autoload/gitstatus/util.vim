@@ -201,7 +201,7 @@ function! gitstatus#util#ParseGitStatusLine(statusLine, opts) abort
 endfunction
 
 function! gitstatus#util#UpdateParentDirsStatus(cache, root, pathStr, statusKey, opts) abort
-    if a:cache[a:pathStr] ==# 'Ignored'
+    if get(a:cache, a:pathStr, '') ==# 'Ignored'
         return
     endif
     let l:dirtyPath = fnamemodify(a:pathStr, ':h')
