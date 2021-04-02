@@ -101,6 +101,10 @@ let g:NERDTreeGitStatusConcealBrackets = 1 " default: 0
 
 **NOTICE**: DO NOT enable this feature if you have also installed [vim-devicons](https://github.com/ryanoasis/vim-devicons).
 
+## Shameless Self Promotion
+
+[Yanil](https://github.com/Xuyuanp/yanil): Yet Another Nerdtree In Lua
+
 ## Credits
 
 * [scrooloose](https://github.com/scrooloose): Open API for me.
