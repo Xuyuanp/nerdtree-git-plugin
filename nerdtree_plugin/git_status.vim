@@ -166,8 +166,11 @@ function! s:onGitStatusSuccessCB(job) abort
     let l:lines = split(l:output, "\n")
     let l:cache = gitstatus#util#ParseGitStatusLines(a:job.opts.cwd, l:lines, g:)
 
-    call s:listener.SetNext(l:cache)
-    call s:listener.TryUpdateNERDTreeUI()
+    try
+        call s:listener.SetNext(l:cache)
+        call s:listener.TryUpdateNERDTreeUI()
+    catch
+    endtry
 endfunction
 
 function! s:onGitStatusFailedCB(job) abort
