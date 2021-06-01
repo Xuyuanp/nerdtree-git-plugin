@@ -78,7 +78,7 @@ Make sure they are in the right order.
 > How to indicate every single `untracked` file under an `untracked` dir?
 
 ```vim
-let g:NERDTreeGitStatusUntrackedFilesMode = 'all' " a heave feature too. default: normal
+let g:NERDTreeGitStatusUntrackedFilesMode = 'all' " a heavy feature too. default: normal
 ```
 
 > How to set `git` executable file path?
