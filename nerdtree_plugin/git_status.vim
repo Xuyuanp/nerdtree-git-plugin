@@ -48,6 +48,7 @@ let s:default_vals = {
             \ 'g:NERDTreeGitStatusShowClean':          0,
             \ 'g:NERDTreeGitStatusLogLevel':           2,
             \ 'g:NERDTreeGitStatusPorcelainVersion':   2,
+            \ 'g:NERDTreeGitStatusCwdOnly':            0,
             \ 'g:NERDTreeGitStatusMapNextHunk':        ']c',
             \ 'g:NERDTreeGitStatusMapPrevHunk':        '[c',
             \ 'g:NERDTreeGitStatusUntrackedFilesMode': 'normal',
