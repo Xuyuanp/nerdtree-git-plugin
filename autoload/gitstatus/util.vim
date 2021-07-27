@@ -76,6 +76,10 @@ function! gitstatus#util#BuildGitStatusCommand(root, opts) abort
         let l:cmd += ['--ignore-submodules=' . a:opts['NERDTreeGitStatusIgnoreSubmodules']]
     endif
 
+    if has_key(a:opts, 'NERDTreeGitStatusCwdOnly')
+        let l:cmd += ['.']
+    endif
+
     return l:cmd
 endfunction
 
