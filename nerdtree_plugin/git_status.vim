@@ -325,7 +325,8 @@ function! s:enableLiveUpdate() abort
         " TODO: is it necessary to pass the buffer name?
         autocmd User FugitiveChanged silent! call s:onFileUpdate(expand('%:p'))
 
-        autocmd BufEnter NERD_tree_* call s:onNERDTreeInit(s:path2str(b:NERDTree.root.path))
+        autocmd BufEnter NERD_tree_* if exists('b:NERDTree') |
+                    \ call s:onNERDTreeInit(s:path2str(b:NERDTree.root.path)) | endif
     augroup end
 endfunction
 
